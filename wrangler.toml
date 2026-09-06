@@ -1,0 +1,11 @@
+name = "quizlive-math-api"
+main = "worker.js"
+compatibility_date = "2024-09-01"
+
+[vars]
+ENVIRONMENT = "production"
+
+# Optional: Cloudflare KV for persistent storage
+# [[kv_namespaces]]
+# binding = "QUIZ_KV"
+# id = "your-kv-id"

@@ -1,0 +1,3612 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>QuizLive Math - ระบบสอบออนไลน์วิชาคณิตศาสตร์</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            royal: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              300: '#93c5fd',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- KaTeX CSS & JS for Math Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+
+  <!-- QRCode.js CDN for Generating QR Codes -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <!-- PDF.js for reading PDF files in browser -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+
+  <!-- SheetJS for reading Excel (.xlsx, .xls) files -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Google Fonts: IBM Plex Sans Thai & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      font-family: 'IBM Plex Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .font-num, .font-heading, h1, h2, h3, h4, h5, h6 {
+      font-family: 'Plus Jakarta Sans', 'IBM Plex Sans Thai', sans-serif;
+    }
+    .katex-display {
+      margin: 0.4em 0 !important;
+    }
+    .math-btn {
+      transition: all 0.15s ease;
+    }
+    .math-btn:hover {
+      transform: translateY(-1px);
+    }
+    .math-btn:active {
+      transform: translateY(1px);
+    }
+    @keyframes floatIn {
+      0% { transform: translateY(12px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    .animate-float {
+      animation: floatIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .hero-curve {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%);
+    }
+    .card-shadow {
+      box-shadow: 0 20px 40px -15px rgba(30, 58, 138, 0.12), 0 0 1px 1px rgba(0, 0, 0, 0.04);
+    }
+    .choice-btn {
+      transition: all 0.15s ease-in-out;
+    }
+    .choice-btn:active {
+      transform: scale(0.985);
+    }
+  </style>
+</head>
+
+<body class="bg-[#f8fafc] text-slate-800 min-h-screen flex flex-col justify-between selection:bg-blue-600 selection:text-white antialiased">
+
+  <!-- ======================================================= -->
+  <!-- TOP HERO BANNER & NAVIGATION BAR (REFERENCE STYLE)      -->
+  <!-- ======================================================= -->
+  <div class="relative w-full overflow-hidden hero-curve text-white pb-16 sm:pb-24 pt-4 px-4 sm:px-8">
+    
+    <!-- Ambient Background Blobs -->
+    <div class="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-blue-400/20 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-5xl mx-auto relative z-10">
+      
+      <!-- Top Navbar Row -->
+      <div class="flex items-center justify-between pb-8 border-b border-white/15">
+        
+        <!-- Brand Logo -->
+        <div class="flex items-center gap-3 cursor-pointer select-none" onclick="handleLogoClick()">
+          <div class="w-10 h-10 rounded-2xl bg-white text-blue-700 flex items-center justify-center font-black text-2xl shadow-lg shadow-black/10">
+            ∑
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="font-heading font-extrabold text-xl tracking-tight text-white">
+                QuizLive Math
+              </h1>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white/20 text-blue-100 border border-white/20">
+                PRO
+              </span>
+            </div>
+            <p class="text-xs text-blue-100/80 -mt-0.5 font-light">Online Mathematics Examination</p>
+          </div>
+        </div>
+
+        <!-- Top Right Header Actions -->
+        <div class="flex items-center gap-2.5" id="headerActions">
+          <button onclick="showManualStudentPinModal()" class="px-3.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs font-semibold backdrop-blur-md transition flex items-center gap-1.5">
+            <span>🧑‍🎓</span> สำหรับนักเรียน
+          </button>
+        </div>
+      </div>
+
+      <!-- Welcome Hero Text (Visible on Landing Auth) -->
+      <div id="heroWelcomeBox" class="text-center pt-8 pb-4 space-y-2 max-w-xl mx-auto">
+        <p class="text-xs sm:text-sm text-blue-100 font-light tracking-wide uppercase">
+          ระบบทดสอบคณิตศาสตร์ออนไลน์ KaTeX & Cloud API
+        </p>
+        <h2 class="font-heading font-extrabold text-3xl sm:text-4xl text-white tracking-tight leading-tight">
+          Welcome to <span class="text-amber-300">QuizLive Math</span>
+        </h2>
+        <p class="text-xs sm:text-sm text-blue-100/90 font-light">
+          เข้าสู่ระบบเพื่อจัดการคลังข้อสอบ หรือเปิดห้องสอบให้นักเรียนสแกนทำข้อสอบ
+        </p>
+      </div>
+
+    </div>
+
+    <!-- Smooth Bottom Wave Divider -->
+    <div class="absolute bottom-0 left-0 right-0 leading-none">
+      <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-8 sm:h-12 text-[#f8fafc] preserve-3d" preserveAspectRatio="none">
+        <path d="M0,32L80,42.7C160,53,320,75,480,74.7C640,75,800,53,960,42.7C1120,32,1280,32,1360,32L1440,32L1440,80L1360,80C1280,80,1120,80,960,80C800,80,640,80,480,80C320,80,160,80,80,80L0,80Z" fill="currentColor"></path>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MAIN APP CONTAINER (OVERLAPPING HERO CARD)               -->
+  <!-- ======================================================= -->
+  <main class="flex-1 -mt-12 sm:-mt-16 z-20 px-3 sm:px-6 max-w-5xl mx-auto w-full pb-12">
+
+    <!-- ======================================================= -->
+    <!-- VIEW 1: MODERN FLOATING SIGN-IN CARD (REFERENCE STYLE)  -->
+    <!-- ======================================================= -->
+    <div id="teacherAuthView" class="w-full max-w-md mx-auto animate-float">
+      
+      <div class="bg-white rounded-3xl p-6 sm:p-10 card-shadow border border-slate-100 space-y-6">
+        
+        <!-- Card Title -->
+        <div class="text-center space-y-1">
+          <h3 class="font-heading font-extrabold text-2xl text-slate-800 tracking-tight">
+            Sign In
+          </h3>
+          <p class="text-xs text-slate-500 font-light">
+            กรอกรหัส PIN ครูผู้สอนเพื่อเข้าใช้งานระบบ
+          </p>
+        </div>
+
+        <!-- PIN Login Form -->
+        <form id="teacherLoginForm" onsubmit="handleTeacherLogin(event)" class="space-y-4">
+          
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-slate-600">รหัส PIN ครูผู้สอน:</label>
+            <div class="relative flex items-center">
+              <div class="absolute left-4 text-slate-400 text-lg select-none">
+                🔒
+              </div>
+              <input type="password" id="teacherLoginPinInput" required autofocus maxlength="8" placeholder="ใส่รหัส PIN (เช่น 0000)" class="w-full bg-slate-50/70 border border-slate-200 rounded-2xl pl-12 pr-4 py-3.5 text-base text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition font-mono tracking-wider font-semibold">
+            </div>
+          </div>
+
+          <!-- Quick 1-Click Admin Button -->
+          <div class="flex items-center justify-between text-xs pt-0.5">
+            <span class="text-slate-500 text-[11px]">รหัสแอดมินเริ่มต้น:</span>
+            <button type="button" onclick="fillAdminPin()" class="text-blue-600 hover:text-blue-800 font-bold text-xs bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 transition">
+              ใช้รหัสแอดมิน 0000
+            </button>
+          </div>
+
+          <button type="submit" class="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-heading font-bold text-base shadow-lg shadow-blue-500/25 active:scale-[0.98] transition flex items-center justify-center gap-2">
+            <span>Sign In</span>
+            <span>➔</span>
+          </button>
+        </form>
+
+        <!-- Bottom Options -->
+        <div class="pt-5 border-t border-slate-100 flex items-center justify-between text-xs">
+          <button type="button" onclick="showManualStudentPinModal()" class="text-slate-500 hover:text-blue-600 font-medium transition flex items-center gap-1">
+            <span>🧑‍🎓</span> สำหรับนักเรียน
+          </button>
+
+          <button type="button" onclick="openTeacherRegisterModal()" class="text-blue-600 hover:text-blue-800 font-bold transition">
+            Create new account
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- VIEW 2: TEACHER & ADMIN DASHBOARD (MODERN SAAS STYLE)   -->
+    <!-- ======================================================= -->
+    <div id="teacherDashboardView" class="hidden w-full max-w-5xl mx-auto space-y-6 animate-float">
+      
+      <!-- Top Overview Bar -->
+      <div class="bg-white rounded-3xl p-5 sm:p-7 card-shadow border border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 flex-wrap pb-1">
+            <span id="dashboardRoleBadge" class="px-2.5 py-0.5 rounded-lg bg-blue-50 text-blue-700 font-bold text-xs border border-blue-100">
+              👑 Admin Dashboard
+            </span>
+            <span class="text-xs text-emerald-700 font-semibold" id="teacherNameDisplay">● เข้าสู่ระบบแล้ว</span>
+            <span id="backendStatusBadge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono">
+              ☁️ Cloudflare Worker Connected
+            </span>
+          </div>
+          <h2 class="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900" id="dashboardMainTitle">
+            ระบบบริหารจัดการข้อสอบ & บัญชีครู
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-500" id="dashboardMainSubtitle">
+            ภาพรวมชุดข้อสอบทุกวิชา รายชื่อครูผู้ลงทะเบียน และการจัดการคลังข้อสอบ
+          </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+          <button onclick="openLiveSessionModal()" class="flex-1 sm:flex-none px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 font-heading font-bold text-sm text-white shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-2 transition active:scale-95">
+            <span class="text-lg">🚀</span> เปิดห้องสอบ (Live)
+          </button>
+          
+          <button onclick="openAddQuestionChoiceModal()" class="flex-1 sm:flex-none px-4 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 font-heading font-bold text-xs sm:text-sm text-white shadow-lg shadow-blue-600/25 flex items-center justify-center gap-1.5 transition active:scale-95">
+            <span>➕</span> เพิ่มข้อสอบ
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI ANALYTICS STAT CARDS ROW (4 CARDS) -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        
+        <!-- Stat 1: Registered Teachers (Admin) / Teacher Profile (Teacher) -->
+        <div id="statCardTeachers" onclick="switchDashboardTab('teachers')" class="bg-white rounded-2xl p-4 border border-slate-100 card-shadow hover:border-purple-300 hover:shadow-md transition cursor-pointer space-y-1">
+          <div class="flex items-center justify-between">
+            <span id="statTeacherTitle" class="text-xs font-bold text-slate-500">ครูที่ลงทะเบียน</span>
+            <span id="statTeacherIcon" class="w-7 h-7 rounded-xl bg-purple-50 text-purple-600 border border-purple-200 flex items-center justify-center text-xs">👥</span>
+          </div>
+          <div class="font-heading font-black text-2xl sm:text-3xl text-purple-700 truncate">
+            <span id="statTotalTeachers">0</span> <span id="statTeacherUnit" class="text-xs font-semibold text-slate-400">คน</span>
+          </div>
+          <p id="statTeacherSubtext" class="text-[11px] text-purple-600 font-semibold hover:underline flex items-center gap-1">
+            <span>ดูข้อมูลครู</span> <span>➔</span>
+          </p>
+        </div>
+
+        <!-- Stat 2: Total Exam Sets -->
+        <div onclick="switchDashboardTab('sets')" class="bg-white rounded-2xl p-4 border border-slate-100 card-shadow hover:border-blue-300 hover:shadow-md transition cursor-pointer space-y-1">
+          <div class="flex items-center justify-between">
+            <span id="statSetsLabel" class="text-xs font-bold text-slate-500">ชุดข้อสอบทั้งหมด</span>
+            <span class="w-7 h-7 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center text-xs">📚</span>
+          </div>
+          <div class="font-heading font-black text-2xl sm:text-3xl text-blue-600">
+            <span id="statTotalSets">0</span> <span class="text-xs font-semibold text-slate-400">ชุด</span>
+          </div>
+          <p class="text-[11px] text-slate-500 truncate" title="เช่น คณิต ม.1, คณิต ม.2, ไทย ม.4">เช่น คณิต ม.1, คณิต ม.2, ไทย ม.4</p>
+        </div>
+
+        <!-- Stat 3: Total Questions -->
+        <div onclick="switchDashboardTab('questions')" class="bg-white rounded-2xl p-4 border border-slate-100 card-shadow hover:border-emerald-300 hover:shadow-md transition cursor-pointer space-y-1">
+          <div class="flex items-center justify-between">
+            <span id="statQuestionsLabel" class="text-xs font-bold text-slate-500">ข้อสอบทั้งหมด</span>
+            <span class="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center text-xs">📝</span>
+          </div>
+          <div class="font-heading font-black text-2xl sm:text-3xl text-emerald-600">
+            <span id="statTotalQuestions">0</span> <span class="text-xs font-semibold text-slate-400">ข้อ</span>
+          </div>
+          <p class="text-[11px] text-slate-500 truncate">พร้อม KaTeX & รูปภาพ</p>
+        </div>
+
+        <!-- Stat 4: Total Subjects -->
+        <div class="bg-white rounded-2xl p-4 border border-slate-100 card-shadow space-y-1">
+          <div class="flex items-center justify-between">
+            <span id="statSubjectsLabel" class="text-xs font-bold text-slate-500">กลุ่มวิชาในระบบ</span>
+            <span class="w-7 h-7 rounded-xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center text-xs">🏷️</span>
+          </div>
+          <div class="font-heading font-black text-2xl sm:text-3xl text-amber-600">
+            <span id="statTotalSubjects">0</span> <span class="text-xs font-semibold text-slate-400">วิชา</span>
+          </div>
+          <div id="statSubjectsBadges" class="flex items-center gap-1 flex-wrap overflow-hidden max-h-6">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- DASHBOARD SUB-NAVIGATION TABS -->
+      <div class="bg-white rounded-2xl p-1.5 border border-slate-100 card-shadow flex items-center gap-1.5 overflow-x-auto">
+        <button type="button" id="tabBtnSets" onclick="switchDashboardTab('sets')" class="flex-1 min-w-[130px] py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm">
+          <span>📚</span> <span id="tabBtnSetsLabel">ชุดข้อสอบ</span> (<span id="badgeSetsCount">0</span>)
+        </button>
+        <button type="button" id="tabBtnTeachers" onclick="switchDashboardTab('teachers')" class="flex-1 min-w-[130px] py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition flex items-center justify-center gap-1.5">
+          <span>👥</span> ข้อมูลครู (<span id="badgeTeachersCount">0</span>)
+        </button>
+        <button type="button" id="tabBtnQuestions" onclick="switchDashboardTab('questions')" class="flex-1 min-w-[130px] py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition flex items-center justify-center gap-1.5">
+          <span>📝</span> <span id="tabBtnQuestionsLabel">คลังข้อสอบ</span> (<span id="badgeQuestionsCount">0</span>)
+        </button>
+      </div>
+
+      <!-- ========================================================= -->
+      <!-- SUB-TAB 1: ALL EXAM SETS GRID (คณิต ม.1, คณิต ม.2, ไทย ม.4) -->
+      <!-- ========================================================= -->
+      <div id="tabContentSets" class="space-y-4">
+        <div class="bg-white rounded-3xl p-6 sm:p-7 card-shadow border border-slate-100 space-y-4">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div>
+              <h3 id="tabTitleSets" class="font-heading font-extrabold text-lg sm:text-xl text-slate-900 flex items-center gap-2">
+                <span>📚</span> ชุดข้อสอบทั้งหมดในระบบ
+              </h3>
+              <p id="tabSubTitleSets" class="text-xs text-slate-500 font-medium">
+                แบ่งแยกตามวิชาและระดับชั้นชัดเจน เช่น <span class="font-bold text-blue-600">คณิต ม.1</span>, <span class="font-bold text-blue-600">คณิต ม.2</span>, <span class="font-bold text-amber-700">ไทย ม.4</span> ถือเป็นคนละชุด
+              </p>
+            </div>
+            
+            <button onclick="openAddQuestionChoiceModal()" class="px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-bold text-xs transition flex items-center gap-1.5">
+              <span>➕</span> เพิ่มข้อสอบ / ชุดใหม่
+            </button>
+          </div>
+
+          <!-- Exam Sets Grid Container -->
+          <div id="examSetsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================= -->
+      <!-- SUB-TAB 2: REGISTERED TEACHERS MANAGEMENT                 -->
+      <!-- ========================================================= -->
+      <div id="tabContentTeachers" class="hidden space-y-4">
+        <div class="bg-white rounded-3xl p-6 sm:p-7 card-shadow border border-slate-100 space-y-4">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div>
+              <h3 class="font-heading font-extrabold text-lg sm:text-xl text-slate-900 flex items-center gap-2">
+                <span>👥</span> ข้อมูลครูผู้ลงทะเบียนในระบบ
+              </h3>
+              <p class="text-xs text-slate-500 font-medium">
+                รายชื่อคุณครู รหัส PIN เข้าสู่ระบบ และจำนวนข้อสอบ/ชุดข้อสอบที่ครูแต่ละท่านดูแล
+              </p>
+            </div>
+
+            <button onclick="openTeacherRegisterModal()" class="px-4 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 font-bold text-xs transition flex items-center gap-1.5">
+              <span>✨</span> ลงทะเบียนครูเพิ่ม
+            </button>
+          </div>
+
+          <!-- Teachers Container -->
+          <div id="teachersListContainer" class="space-y-3">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================= -->
+      <!-- SUB-TAB 3: QUESTIONS LIST & TOOLS                         -->
+      <!-- ========================================================= -->
+      <div id="tabContentQuestions" class="hidden space-y-4">
+        <!-- Controls & Filter Toolbar -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          
+          <!-- Filter by Exam Set / Grade Level -->
+          <div class="bg-white rounded-2xl p-4 space-y-1.5 border border-slate-100 shadow-sm sm:col-span-1">
+            <label class="text-xs font-bold text-slate-700">📚 เลือกชุดข้อสอบ / ระดับชั้น:</label>
+            <select id="teacherGradeFilter" onchange="renderTeacherQuestionList()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 font-semibold focus:outline-none focus:border-blue-600 focus:bg-white">
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+
+          <!-- Import Options & Cloud Sync Settings -->
+          <div class="bg-white rounded-2xl p-4 flex items-center justify-between sm:col-span-2 gap-2 flex-wrap border border-slate-100 shadow-sm">
+            <div>
+              <div class="text-xs font-bold text-slate-700">📥 นำเข้า & เครื่องมือ:</div>
+              <div class="text-[11px] text-slate-500">นำเข้า PDF, รูปภาพข้อสอบ OCR, หรือ Excel ด้วย AI</div>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <button onclick="openAiUploadModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 transition shadow-sm">
+                <span>⚡</span> อัปโหลดด้วย AI
+              </button>
+              <button onclick="openAddQuestionChoiceModal()" class="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-bold flex items-center gap-1.5 transition">
+                <span>➕</span> เพิ่มข้อสอบ
+              </button>
+              <button onclick="openCloudSettingsModal()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-bold" title="ตั้งค่าหลังบ้าน Cloudflare Worker API">
+                <span>🔗 หลังบ้าน</span>
+              </button>
+              <button onclick="logoutTeacher()" class="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold border border-slate-200 transition">
+                🚪 ออก
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question List Container -->
+        <div class="bg-white rounded-3xl p-6 sm:p-7 shadow-sm border border-slate-100 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2">
+              <h3 id="tabTitleQuestions" class="font-heading font-bold text-lg text-slate-900">รายการข้อสอบในระบบ</h3>
+              <span id="teacherQuestionCountBadge" class="px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold">0 ข้อ</span>
+            </div>
+            <button onclick="handleClearAllQuestions()" class="text-xs text-rose-600 hover:text-rose-700 underline font-medium">ล้างข้อสอบในชุดนี้</button>
+          </div>
+
+          <div id="teacherQuestionsList" class="space-y-3.5">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- VIEW 3: STUDENT ROOM LANDING (SCAN QR / OPEN LINK)      -->
+    <!-- ======================================================= -->
+    <div id="studentRoomEntryView" class="hidden w-full max-w-lg mx-auto space-y-6 animate-float">
+      
+      <div class="bg-white rounded-3xl p-6 sm:p-8 card-shadow border border-slate-100 space-y-5 text-center">
+        
+        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
+          <span>📲</span> สแกนเข้าสู่ห้องสอบแล้ว
+        </div>
+        
+        <div class="space-y-1">
+          <h2 class="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900">
+            แบบทดสอบคณิตศาสตร์
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-600 font-medium" id="studentAssignedExamTitle">
+            ห้องสอบรหัส: กำลังโหลด...
+          </p>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-blue-50/70 border border-blue-100 flex items-center justify-between text-left">
+          <div class="space-y-0.5">
+            <div class="text-[11px] text-slate-500 font-medium">ชุดข้อสอบที่เปิดสอบ:</div>
+            <div class="font-heading font-bold text-base text-blue-900" id="studentLockedGradeText">ระดับชั้น ม.1</div>
+          </div>
+          <div class="text-right">
+            <div class="text-[11px] text-slate-500 font-medium">จำนวนข้อ:</div>
+            <div class="font-heading font-bold text-base text-emerald-700" id="studentLockedQuestionCount">0 ข้อ</div>
+          </div>
+        </div>
+
+        <form id="studentExamStartForm" onsubmit="handleStudentStartExam(event)" class="space-y-4 text-left">
+          <div class="grid grid-cols-3 gap-3">
+            <div class="space-y-1.5 col-span-1">
+              <label class="text-xs font-bold text-slate-700">🔢 เลขที่:</label>
+              <input type="text" id="activeStudentNoInput" required placeholder="15" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:bg-white focus:border-blue-600 text-center font-bold">
+            </div>
+
+            <div class="space-y-1.5 col-span-2">
+              <label class="text-xs font-bold text-slate-700">👤 ชื่อ - นามสกุล:</label>
+              <input type="text" id="activeStudentNameInput" required placeholder="ด.ช. สมชาย รักเรียน" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:bg-white focus:border-blue-600 font-medium">
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold text-slate-700">🏫 ห้องเรียน (เช่น 1/2):</label>
+            <input type="text" id="activeStudentRoomInput" placeholder="1/1" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:bg-white focus:border-blue-600 font-medium">
+          </div>
+
+          <button type="submit" class="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-heading font-bold text-base shadow-lg shadow-blue-500/25 active:scale-[0.98] transition flex items-center justify-center gap-2 mt-2">
+            <span>🚀 เริ่มทำข้อสอบ</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- VIEW 4: STUDENT TAKING EXAM (DISTRACTION FREE)          -->
+    <!-- ======================================================= -->
+    <div id="studentQuizView" class="hidden w-full max-w-2xl mx-auto space-y-4 animate-float">
+      
+      <!-- Quiz Header Status Bar -->
+      <div class="bg-white rounded-2xl p-4 flex items-center justify-between shadow-sm border border-slate-100">
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-1 rounded-xl bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold" id="quizGradeBadge">
+            ชั้นเรียน
+          </span>
+          <span class="text-xs text-slate-600 font-semibold truncate max-w-[140px] sm:max-w-[200px]" id="quizStudentName">
+            ผู้สอบ
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <!-- Timer Display Badge (Count down or untimed) -->
+          <div id="quizTimerBadge" class="hidden items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold transition-all">
+            <span class="text-sm animate-pulse">⏱️</span>
+            <span id="quizTimerSeconds" class="font-mono font-black text-sm">30</span>
+            <span>วินาที</span>
+          </div>
+          <div id="quizNoTimerBadge" class="hidden items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 text-xs font-medium">
+            <span>♾️ ไม่จำกัดเวลา</span>
+          </div>
+
+          <div class="text-right">
+            <span class="text-xs text-slate-400 font-medium">ข้อที่</span>
+            <span class="font-heading font-extrabold text-blue-600 text-lg" id="currentQuestionNum">1</span>
+            <span class="text-xs text-slate-400 font-medium" id="totalQuestionsNum">/ 10</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Animated Progress Bar -->
+      <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+        <div id="quizProgressBar" class="bg-blue-600 h-full w-0 transition-all duration-300"></div>
+      </div>
+
+      <!-- Question Card -->
+      <div class="bg-white rounded-3xl p-6 sm:p-8 card-shadow border border-slate-100 space-y-6">
+        <div class="space-y-3">
+          <span class="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold border border-blue-100">
+            โจทย์คณิตศาสตร์
+          </span>
+          <div id="questionTextDisplay" class="text-lg sm:text-2xl font-bold text-slate-900 leading-relaxed pt-1 overflow-x-auto"></div>
+
+          <div id="questionImageContainer" class="hidden text-center pt-2">
+            <img id="questionImageDisplay" src="" alt="รูปประกอบโจทย์" class="max-h-72 max-w-full mx-auto rounded-2xl border border-slate-200 shadow-sm object-contain bg-slate-50 p-2">
+          </div>
+        </div>
+
+        <!-- Choices Grid (ก, ข, ค, ง) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+          <button onclick="handleSelectChoice(0)" id="choiceBtn0" class="choice-btn text-left p-4 rounded-2xl bg-slate-50/70 hover:bg-blue-50/80 border-2 border-slate-200 hover:border-blue-500 flex items-start gap-3.5 group">
+            <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 border border-blue-200 flex items-center justify-center font-black font-heading text-sm shrink-0 group-hover:bg-blue-600 group-hover:text-white transition">ก</div>
+            <div id="choiceText0" class="text-sm sm:text-base font-semibold text-slate-800 pt-0.5 overflow-x-auto"></div>
+          </button>
+
+          <button onclick="handleSelectChoice(1)" id="choiceBtn1" class="choice-btn text-left p-4 rounded-2xl bg-slate-50/70 hover:bg-blue-50/80 border-2 border-slate-200 hover:border-blue-500 flex items-start gap-3.5 group">
+            <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 border border-blue-200 flex items-center justify-center font-black font-heading text-sm shrink-0 group-hover:bg-blue-600 group-hover:text-white transition">ข</div>
+            <div id="choiceText1" class="text-sm sm:text-base font-semibold text-slate-800 pt-0.5 overflow-x-auto"></div>
+          </button>
+
+          <button onclick="handleSelectChoice(2)" id="choiceBtn2" class="choice-btn text-left p-4 rounded-2xl bg-slate-50/70 hover:bg-blue-50/80 border-2 border-slate-200 hover:border-blue-500 flex items-start gap-3.5 group">
+            <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 border border-blue-200 flex items-center justify-center font-black font-heading text-sm shrink-0 group-hover:bg-blue-600 group-hover:text-white transition">ค</div>
+            <div id="choiceText2" class="text-sm sm:text-base font-semibold text-slate-800 pt-0.5 overflow-x-auto"></div>
+          </button>
+
+          <button onclick="handleSelectChoice(3)" id="choiceBtn3" class="choice-btn text-left p-4 rounded-2xl bg-slate-50/70 hover:bg-blue-50/80 border-2 border-slate-200 hover:border-blue-500 flex items-start gap-3.5 group">
+            <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 border border-blue-200 flex items-center justify-center font-black font-heading text-sm shrink-0 group-hover:bg-blue-600 group-hover:text-white transition">ง</div>
+            <div id="choiceText3" class="text-sm sm:text-base font-semibold text-slate-800 pt-0.5 overflow-x-auto"></div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- VIEW 5: STUDENT RESULT / SUMMARY                        -->
+    <!-- ======================================================= -->
+    <div id="studentResultView" class="hidden w-full max-w-lg mx-auto space-y-6 animate-float">
+      <div class="bg-white rounded-3xl p-6 sm:p-8 card-shadow border border-slate-100 text-center space-y-6">
+        
+        <div class="w-20 h-20 rounded-3xl bg-amber-50 border border-amber-200 flex items-center justify-center text-4xl shadow-md mx-auto animate-bounce">
+          🏆
+        </div>
+
+        <div class="space-y-1">
+          <span class="px-3.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
+            สอบเสร็จสิ้นเรียบร้อยแล้ว
+          </span>
+          <h2 class="font-heading font-extrabold text-3xl text-slate-900 pt-2" id="resultStudentName">
+            คะแนนสอบของคุณ
+          </h2>
+          <p class="text-xs text-slate-500 font-medium" id="resultGradeName">ระดับชั้น</p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-gradient-to-br from-blue-50 via-slate-50 to-blue-100/70 border border-blue-100 space-y-1">
+          <div class="text-xs text-slate-500 font-bold uppercase tracking-wider">คะแนนที่ได้</div>
+          <div class="font-heading font-black text-5xl sm:text-6xl text-blue-600" id="resultScoreText">
+            0 / 0
+          </div>
+          <div class="text-xs text-slate-600 font-semibold" id="resultPercentageText">ความแม่นยำ 0%</div>
+        </div>
+
+        <div class="space-y-3 pt-2">
+          <button onclick="toggleReviewAnswers()" class="w-full py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold text-sm transition flex items-center justify-center gap-2">
+            <span>🔍 ดูเฉลยและวิธีคิดอย่างละเอียด</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="detailedReviewContainer" class="hidden bg-white rounded-3xl p-6 sm:p-8 card-shadow border border-slate-100 space-y-4">
+        <h3 class="font-heading font-extrabold text-lg text-slate-900 flex items-center gap-2">
+          <span>📝</span> ตรวจทานเฉลยทุกข้อ
+        </h3>
+        <div id="detailedReviewList" class="space-y-4"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ======================================================= -->
+  <!-- MODAL: LIVE EXAM SESSION & LARGE PRESENTATION QR CODE    -->
+  <!-- ======================================================= -->
+  <div id="liveSessionModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-6 text-center border border-slate-200 shadow-2xl animate-pop">
+      
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🚀</span>
+          <div class="text-left">
+            <h3 class="font-heading font-black text-xl text-slate-900">ห้องสอบออนไลน์ (Live Session)</h3>
+            <p class="text-xs text-slate-500">ฉาย QR Code นี้ขึ้นจอโปรเจกเตอร์เพื่อให้นักเรียนสแกน</p>
+          </div>
+        </div>
+        <button onclick="closeLiveSessionModal()" class="text-slate-400 hover:text-slate-700 text-lg font-bold">✕</button>
+      </div>
+
+      <div class="space-y-1.5 text-left">
+        <label class="text-xs font-bold text-slate-700">📚 เลือกชุดข้อสอบระดับชั้นที่จะเปิดให้นักเรียนทำ:</label>
+        <select id="sessionGradeSelect" onchange="generateLiveSessionQR()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-blue-600 font-bold">
+          <!-- Dynamically populated -->
+        </select>
+      </div>
+
+      <div class="p-6 rounded-3xl bg-slate-50 border-2 border-slate-200 flex flex-col items-center justify-center space-y-3">
+        <div id="sessionQRCodeBox" class="flex items-center justify-center p-3 bg-white rounded-2xl border border-slate-200 shadow-sm"></div>
+        <p class="text-sm font-black text-slate-800 tracking-wide">📲 เปิดกล้องมือถือสแกนเพื่อเข้าสอบทันที</p>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-slate-600 font-bold">🔑 รหัสห้องสอบ (Room PIN):</span>
+          <span id="sessionPinCode" class="font-mono font-black text-3xl text-blue-600 tracking-widest">---</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input type="text" id="sessionDirectUrlInput" readonly class="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-700 font-mono">
+          <button onclick="copySessionLink()" id="copyLinkBtn" class="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition shrink-0">
+            📋 คัดลอกลิงก์
+          </button>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-3 pt-2">
+        <button onclick="closeLiveSessionModal()" class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-heading font-black text-sm text-white shadow-lg shadow-emerald-200">
+          ✅ เปิดห้องสอบแล้ว (นักเรียนทำข้อสอบชุดนี้ได้ทันที)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MODAL: CLOUD BACKEND SETTINGS (CLOUDFLARE WORKER SYNC)   -->
+  <!-- ======================================================= -->
+  <div id="cloudSettingsModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-5 border border-slate-200 shadow-2xl animate-pop">
+      
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">🔗</span>
+          <h3 class="font-heading font-black text-xl text-slate-900">ตั้งค่าเชื่อมต่อหลังบ้าน (Cloudflare API)</h3>
+        </div>
+        <button onclick="closeCloudSettingsModal()" class="text-slate-400 hover:text-slate-700 text-lg font-bold">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-1">
+          <span class="font-bold text-emerald-800">⚡ เชื่อมต่อกับ Cloudflare Workers เรียบร้อยแล้ว:</span>
+          <p class="text-[11px] text-emerald-700">ระบบจะทำการซิงค์ข้อสอบและคะแนนนักเรียนผ่าน Cloudflare Serverless API อัตโนมัติ</p>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="font-bold text-slate-700">🌐 Cloudflare Worker API URL:</label>
+          <input type="text" id="cloudBackendUrlInput" placeholder="https://quizlive-math-api.phubet-hppk.workers.dev" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-blue-600 font-mono">
+        </div>
+
+        <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+          <button onclick="testCloudConnection()" type="button" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-800 font-bold transition">
+            🔄 ทดสอบเชื่อมต่อ
+          </button>
+          <button onclick="saveCloudSettings()" type="button" class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-black shadow-md shadow-emerald-200">
+            💾 บันทึกการเชื่อมต่อ
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MODAL: TEACHER REGISTER MODAL                           -->
+  <!-- ======================================================= -->
+  <div id="teacherRegisterModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-5 border border-slate-200 shadow-2xl animate-pop">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">✨</span>
+          <h3 class="font-heading font-black text-xl text-slate-900">ลงทะเบียนครูใหม่</h3>
+        </div>
+        <button onclick="closeTeacherRegisterModal()" class="text-slate-400 hover:text-slate-700 text-lg font-bold">✕</button>
+      </div>
+
+      <form onsubmit="handleTeacherRegister(event)" class="space-y-4">
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-slate-700">👤 ชื่อ-นามสกุล คุณครู:</label>
+          <input type="text" id="teacherRegNameInput" required placeholder="เช่น นายภูเบศ ศรีพานิช หรือ ครูสมศรี" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition font-medium">
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-blue-700">🔒 กำหนดรหัส PIN (4-8 หลัก สำหรับกดเข้าระบบ):</label>
+          <input type="password" id="teacherRegPinInput" required maxlength="8" placeholder="เช่น 1234 หรือ 8888" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition font-mono tracking-widest text-center text-lg">
+          <p class="text-[11px] text-slate-400">เมื่อลงทะเบียนแล้ว คุณครูสามารถใช้รหัส PIN นี้กดเข้าสู่ระบบได้โดยตรงทันที</p>
+        </div>
+
+        <div class="flex items-center gap-2 pt-2 border-t border-slate-100">
+          <button type="button" onclick="closeTeacherRegisterModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold">
+            ยกเลิก
+          </button>
+          <button type="submit" class="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-black text-sm shadow-md shadow-emerald-200 transition">
+            💾 บันทึกและเข้าสู่ระบบ
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MODAL: STUDENT MANUAL ROOM PIN ENTRY                    -->
+  <!-- ======================================================= -->
+  <div id="manualStudentPinModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 space-y-5 border border-slate-200 shadow-2xl animate-pop text-center">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="font-heading font-black text-lg text-slate-900">🧑‍🎓 ใส่รหัสห้องสอบ</h3>
+        <button onclick="closeManualStudentPinModal()" class="text-slate-400 hover:text-slate-700 text-lg font-bold">✕</button>
+      </div>
+
+      <p class="text-xs text-slate-500 font-medium">กรอกรหัส 6 หลักที่ครูฉายบนหน้าจอ</p>
+
+      <form onsubmit="handleManualPinSubmit(event)" class="space-y-4">
+        <input type="text" id="manualPinInput" required placeholder="เช่น 489201" class="w-full bg-slate-50 border-2 border-blue-200 rounded-2xl px-4 py-3 text-2xl font-mono font-black tracking-widest text-blue-600 text-center focus:outline-none focus:border-blue-600 focus:bg-white">
+        <button type="submit" class="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 font-heading font-black text-sm text-white shadow-lg shadow-blue-200">
+          เข้าสู่ห้องสอบ
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MODAL: CHOOSE ADD QUESTION METHOD (MANUAL VS AI UPLOAD) -->
+  <!-- ======================================================= -->
+  <div id="addMethodSelectModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 my-auto border border-slate-200 shadow-2xl animate-float">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center text-xl font-bold">➕</span>
+          <div>
+            <h3 class="font-heading font-black text-xl text-slate-900">เลือกวิธีการเพิ่มข้อสอบ</h3>
+            <p class="text-xs text-slate-500 font-medium">เพิ่มข้อสอบเข้าสู่ระบบเพื่อจัดชุดหรือเปิดสอบสด</p>
+          </div>
+        </div>
+        <button onclick="closeAddMethodSelectModal()" class="text-slate-400 hover:text-slate-700 text-lg font-bold p-1 rounded-lg hover:bg-slate-100 transition">✕</button>
+      </div>
+
+      <div class="grid grid-cols-1 gap-3.5">
+        <!-- Option 1: AI Upload (Recommended) -->
+        <button type="button" onclick="selectAddMethod('upload')" class="group text-left p-5 rounded-2xl bg-gradient-to-br from-blue-50/80 via-white to-indigo-50/40 hover:from-blue-100/70 hover:to-indigo-100/50 border-2 border-blue-200 hover:border-blue-500 transition shadow-sm hover:shadow-md flex items-start gap-4">
+          <div class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-2xl shrink-0 shadow-md shadow-blue-500/25 group-hover:scale-105 transition">
+            ⚡
+          </div>
+          <div class="space-y-1 flex-1">
+            <div class="flex items-center justify-between">
+              <h4 class="font-heading font-black text-base text-slate-900 group-hover:text-blue-700 transition">อัปโหลดไฟล์ด้วย AI</h4>
+              <span class="px-2 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-black uppercase tracking-wider">แนะนำ ⭐</span>
+            </div>
+            <p class="text-xs text-slate-600 font-medium leading-relaxed">
+              นำเข้าจาก <b>PDF</b>, <b>รูปภาพข้อสอบ/ใบงาน (OCR)</b> หรือ <b>Excel</b> ให้ AI วิเคราะห์แยกโจทย์ ชอยส์ ก-ง สูตร KaTeX และเฉลยอัตโนมัติ
+            </p>
+            <div class="flex items-center gap-2 pt-1 text-[11px] font-bold text-blue-700">
+              <span>📄 PDF</span>
+              <span>•</span>
+              <span>🖼️ รูปภาพ</span>
+              <span>•</span>
+              <span>📊 Excel/CSV</span>
+            </div>
+          </div>
+        </button>
+
+        <!-- Option 2: Manual Typing -->
+        <button type="button" onclick="selectAddMethod('manual')" class="group text-left p-5 rounded-2xl bg-white hover:bg-slate-50 border-2 border-slate-200 hover:border-slate-400 transition shadow-xs hover:shadow-sm flex items-start gap-4">
+          <div class="w-12 h-12 rounded-2xl bg-slate-100 group-hover:bg-slate-200 text-slate-700 flex items-center justify-center text-2xl shrink-0 transition">
+            ✍️
+          </div>
+          <div class="space-y-1 flex-1">
+            <h4 class="font-heading font-black text-base text-slate-900 group-hover:text-slate-800 transition">พิมพ์ข้อสอบเองทีละข้อ</h4>
+            <p class="text-xs text-slate-500 font-medium leading-relaxed">
+              กรอกข้อความโจทย์ แทรกสูตรคณิตศาสตร์ KaTeX เพิ่มรูปประกอบ กำหนดตัวเลือก 4 ข้อ และเฉลยด้วยตนเอง
+            </p>
+          </div>
+        </button>
+      </div>
+
+      <div class="pt-2 text-center">
+        <button type="button" onclick="closeAddMethodSelectModal()" class="px-5 py-2 text-xs font-bold text-slate-500 hover:text-slate-700">
+          ยกเลิก
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MODAL: ADD / EDIT QUESTION WITH MATH & IMAGE SUPPORT    -->
+  <!-- ======================================================= -->
+  <div id="addQuestionModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-5 my-auto max-h-[92vh] overflow-y-auto border border-slate-200 shadow-2xl">
+      
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center font-bold text-sm">➕</span>
+          <h3 class="font-heading font-black text-xl text-slate-900" id="modalTitle">เพิ่มข้อสอบในระบบ</h3>
+        </div>
+        <button onclick="closeAddQuestionModal()" class="text-slate-400 hover:text-slate-700 text-lg font-bold">✕</button>
+      </div>
+
+      <form id="questionForm" onsubmit="handleSaveQuestion(event)" class="space-y-4">
+        <input type="hidden" id="editQuestionId">
+        <input type="hidden" id="qImageData">
+
+        <!-- UNIFIED SINGLE EXAM SET NAME -->
+        <div class="space-y-1.5 p-4 rounded-2xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-blue-50/70 border-2 border-blue-200">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-black text-blue-950 flex items-center gap-1.5">
+              <span>🏷️ ชื่อชุดข้อสอบ (ตั้งชื่อได้อย่างอิสระ):</span>
+            </label>
+            <span class="text-[11px] font-semibold text-blue-700">เช่น คณิต ม.1, คณิต ม.2, ไทย ม.4</span>
+          </div>
+          <input type="text" id="qGradeInput" list="existingSetsList" required placeholder="พิมพ์ตั้งชื่อชุดข้อสอบ เช่น คณิต ม.1 หรือ ไทย ม.4" class="w-full bg-white border-2 border-blue-300 rounded-xl px-4 py-2.5 text-base text-blue-900 font-bold placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition shadow-xs">
+          <datalist id="existingSetsList">
+            <!-- Dynamically populated from teacher's created sets only -->
+          </datalist>
+          <p class="text-[11px] text-slate-500 font-medium pt-0.5">
+            💡 <b>คำแนะนำ:</b> ตั้งชื่อชุดแรกได้อย่างอิสระ เมื่อมีการบันทึกแล้ว รายชื่อชุดจะปรากฏเป็นตัวเลือกให้กดในข้อถัดไปทันที
+          </p>
+        </div>
+
+        <!-- TIMER OPTION SECTION (จับเวลา / ไม่จับเวลา) -->
+        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <span>⏱️ การจับเวลาในการทำข้อสอบ:</span>
+            </label>
+            <span id="timerStatusHelp" class="text-[11px] font-semibold text-slate-500">เลือกจับเวลาหรือไม่ก็ได้</span>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <label class="flex items-center gap-2 cursor-pointer bg-white px-3.5 py-2 rounded-xl border border-slate-200 hover:border-blue-400 text-xs font-bold text-slate-700 transition shadow-xs">
+              <input type="radio" name="timerOptionRadio" id="timerOptNo" value="0" onchange="handleTimerOptionChange()" checked class="w-4 h-4 text-blue-600 accent-blue-600">
+              <span>♾️ ไม่จับเวลา (ไม่จำกัดเวลา)</span>
+            </label>
+
+            <label class="flex items-center gap-2 cursor-pointer bg-white px-3.5 py-2 rounded-xl border border-slate-200 hover:border-blue-400 text-xs font-bold text-slate-700 transition shadow-xs">
+              <input type="radio" name="timerOptionRadio" id="timerOptYes" value="1" onchange="handleTimerOptionChange()" class="w-4 h-4 text-blue-600 accent-blue-600">
+              <span>⏱️ จับเวลาข้อนี้</span>
+            </label>
+            
+            <div id="timeLimitInputContainer" class="hidden items-center gap-2">
+              <input type="number" id="qTimeLimitInput" value="30" min="5" max="600" placeholder="วินาที" class="w-24 bg-white border-2 border-blue-300 rounded-xl px-3 py-1.5 text-sm text-blue-900 font-black text-center focus:outline-none focus:border-blue-600">
+              <span class="text-xs font-bold text-slate-600">วินาที</span>
+              <div class="flex items-center gap-1">
+                <button type="button" onclick="setQuickSeconds(15)" class="px-2 py-1 rounded-lg bg-slate-200 hover:bg-blue-100 text-slate-700 text-[11px] font-bold transition">15s</button>
+                <button type="button" onclick="setQuickSeconds(30)" class="px-2 py-1 rounded-lg bg-slate-200 hover:bg-blue-100 text-slate-700 text-[11px] font-bold transition">30s</button>
+                <button type="button" onclick="setQuickSeconds(60)" class="px-2 py-1 rounded-lg bg-slate-200 hover:bg-blue-100 text-slate-700 text-[11px] font-bold transition">60s</button>
+                <button type="button" onclick="setQuickSeconds(120)" class="px-2 py-1 rounded-lg bg-slate-200 hover:bg-blue-100 text-slate-700 text-[11px] font-bold transition">120s</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-xs font-bold text-slate-700">📝 โจทย์คำถาม (พิมพ์ข้อความ + สูตร LaTeX):</label>
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex flex-wrap gap-1.5 text-xs">
+            <span class="text-[11px] text-slate-500 self-center font-bold mr-1">สูตรด่วน:</span>
+            <button type="button" onclick="insertMathFormula('\\frac{a}{b}', 'qTextInput')" class="math-btn px-2.5 py-1 rounded-lg bg-white hover:bg-blue-50 border border-slate-200 text-blue-700 font-mono text-xs shadow-sm">$\frac{a}{b}$ เศษส่วน</button>
+            <button type="button" onclick="insertMathFormula('\\sqrt{x}', 'qTextInput')" class="math-btn px-2.5 py-1 rounded-lg bg-white hover:bg-blue-50 border border-slate-200 text-blue-700 font-mono text-xs shadow-sm">$\sqrt{x}$ รูท</button>
+            <button type="button" onclick="insertMathFormula('x^2', 'qTextInput')" class="math-btn px-2.5 py-1 rounded-lg bg-white hover:bg-blue-50 border border-slate-200 text-blue-700 font-mono text-xs shadow-sm">$x^2$ ยกกำลัง</button>
+            <button type="button" onclick="insertMathFormula('\\times', 'qTextInput')" class="math-btn px-2.5 py-1 rounded-lg bg-white hover:bg-blue-50 border border-slate-200 text-blue-700 font-mono text-xs shadow-sm">$\times$ คูณ</button>
+            <button type="button" onclick="insertMathFormula('\\div', 'qTextInput')" class="math-btn px-2.5 py-1 rounded-lg bg-white hover:bg-blue-50 border border-slate-200 text-blue-700 font-mono text-xs shadow-sm">$\div$ หาร</button>
+            <button type="button" onclick="insertMathFormula('\\pm', 'qTextInput')" class="math-btn px-2.5 py-1 rounded-lg bg-white hover:bg-blue-50 border border-slate-200 text-blue-700 font-mono text-xs shadow-sm">$\pm$</button>
+            <button type="button" onclick="insertMathFormula('\\pi', 'qTextInput')" class="math-btn px-2.5 py-1 rounded-lg bg-white hover:bg-blue-50 border border-slate-200 text-blue-700 font-mono text-xs shadow-sm">$\pi$</button>
+            <button type="button" onclick="insertMathFormula('\\le', 'qTextInput')" class="math-btn px-2.5 py-1 rounded-lg bg-white hover:bg-blue-50 border border-slate-200 text-blue-700 font-mono text-xs shadow-sm">$\le$</button>
+            <button type="button" onclick="insertMathFormula('\\ge', 'qTextInput')" class="math-btn px-2.5 py-1 rounded-lg bg-white hover:bg-blue-50 border border-slate-200 text-blue-700 font-mono text-xs shadow-sm">$\ge$</button>
+            <button type="button" onclick="insertMathFormula('\\neq', 'qTextInput')" class="math-btn px-2.5 py-1 rounded-lg bg-white hover:bg-blue-50 border border-slate-200 text-blue-700 font-mono text-xs shadow-sm">$\neq$</button>
+          </div>
+
+          <textarea id="qTextInput" required rows="2" oninput="updateLivePreview()" placeholder="เช่น จากรูปสามเหลี่ยม จงหาความยาวของด้าน $c$ หรือ ความหมายของคำว่า..." class="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-sm text-slate-900 focus:outline-none focus:bg-white focus:border-blue-600 font-mono"></textarea>
+          
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+            <span class="text-[11px] text-slate-500 font-bold uppercase tracking-wider">👁️ ตัวอย่างแสดงผล (KaTeX Preview):</span>
+            <div id="liveMathPreview" class="text-sm sm:text-base text-slate-900 font-semibold min-h-[24px]"></div>
+          </div>
+        </div>
+
+        <!-- IMAGE UPLOAD SECTION -->
+        <div class="space-y-2 p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <span>🖼️</span> รูปภาพประกอบโจทย์ (กราฟ / รูปเรขาคณิต / แผนภูมิ / รูปภาพ):
+            </label>
+            <button type="button" id="removeImageBtn" onclick="removeQuestionImage()" class="text-xs text-rose-600 hover:text-rose-700 font-bold hidden">
+              🗑️ ลบรูปภาพ
+            </button>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <label for="qImageFileInput" class="cursor-pointer px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-xs font-bold text-slate-700 flex items-center gap-1.5 transition shadow-sm">
+              <span>📁</span> เลือกรูปจากเครื่อง
+            </label>
+            <input type="file" id="qImageFileInput" accept="image/*" onchange="handleQuestionImageSelected(event)" class="hidden">
+            <span class="text-[11px] text-slate-500">รองรับไฟล์ PNG, JPG, JPEG หรือภาพแคปหน้าจอ</span>
+          </div>
+
+          <div id="modalImagePreviewBox" class="hidden text-center pt-2">
+            <img id="modalImagePreview" src="" alt="พรีวิวรูปโจทย์" class="max-h-48 max-w-full mx-auto rounded-xl border border-slate-200 object-contain shadow-sm bg-white p-2">
+          </div>
+        </div>
+
+        <!-- Choices (ก, ข, ค, ง) -->
+        <div class="space-y-2.5">
+          <label class="text-xs font-bold text-slate-700 flex items-center justify-between">
+            <span>🎯 ตัวเลือก 4 ข้อ (คลิกเลือกปุ่มวงกลมข้อที่ถูกต้อง):</span>
+            <span class="text-[11px] text-emerald-700 font-bold">● ข้อที่เฉลยถูกต้อง</span>
+          </label>
+
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <label class="flex items-center gap-1.5 cursor-pointer">
+                <input type="radio" name="correctChoiceRadio" value="0" checked class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 accent-emerald-600">
+                <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 flex items-center justify-center font-bold text-xs">ก</span>
+              </label>
+              <input type="text" id="qChoice0" required placeholder="ตัวเลือก ก" class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:bg-white focus:border-blue-600 font-medium">
+            </div>
+
+            <div class="flex items-center gap-2">
+              <label class="flex items-center gap-1.5 cursor-pointer">
+                <input type="radio" name="correctChoiceRadio" value="1" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 accent-emerald-600">
+                <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 flex items-center justify-center font-bold text-xs">ข</span>
+              </label>
+              <input type="text" id="qChoice1" required placeholder="ตัวเลือก ข" class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:bg-white focus:border-blue-600 font-medium">
+            </div>
+
+            <div class="flex items-center gap-2">
+              <label class="flex items-center gap-1.5 cursor-pointer">
+                <input type="radio" name="correctChoiceRadio" value="2" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 accent-emerald-600">
+                <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 flex items-center justify-center font-bold text-xs">ค</span>
+              </label>
+              <input type="text" id="qChoice2" required placeholder="ตัวเลือก ค" class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:bg-white focus:border-blue-600 font-medium">
+            </div>
+
+            <div class="flex items-center gap-2">
+              <label class="flex items-center gap-1.5 cursor-pointer">
+                <input type="radio" name="correctChoiceRadio" value="3" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500 accent-emerald-600">
+                <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 flex items-center justify-center font-bold text-xs">ง</span>
+              </label>
+              <input type="text" id="qChoice3" required placeholder="ตัวเลือก ง" class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:bg-white focus:border-blue-600 font-medium">
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-slate-700">💡 คำอธิบายเฉลย / วิธีทำ:</label>
+          <input type="text" id="qExplanationInput" placeholder="เช่น จากทฤษฎีบทพีทาโกรัส $c = \sqrt{a^2 + b^2}$ หรือ คำอธิบายหลักภาษา..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:bg-white focus:border-blue-600 font-medium">
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeAddQuestionModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs">ยกเลิก</button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 font-heading font-black text-sm text-white shadow-md shadow-blue-200">
+            💾 บันทึกข้อสอบ
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MODAL: UNIFIED AI SMART IMPORT (PDF / IMAGE / EXCEL)    -->
+  <!-- ======================================================= -->
+  <div id="aiUploadModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-5 my-auto max-h-[92vh] overflow-y-auto border border-slate-200 shadow-2xl">
+      
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center text-xl font-bold">⚡</span>
+          <div>
+            <h3 class="font-heading font-black text-xl text-slate-900">นำเข้าข้อสอบด้วย AI (AI Smart Import)</h3>
+            <p class="text-xs text-slate-500 font-medium">สกัดโจทย์ สูตรคณิต KaTeX ตัวเลือก ก-ง และเฉลยอัตโนมัติ</p>
+          </div>
+        </div>
+        <button onclick="closeAiUploadModal()" class="text-slate-400 hover:text-slate-700 text-lg font-bold p-1 rounded-lg hover:bg-slate-100 transition">✕</button>
+      </div>
+
+      <!-- Section: Exam Set Name (ชื่อชุดข้อสอบ) -->
+      <div class="space-y-1.5 p-4 rounded-2xl bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-blue-50/80 border-2 border-blue-200">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-black text-blue-950 flex items-center gap-1.5">
+            <span>🏷️ ชื่อชุดข้อสอบ / วิชาที่จะนำเข้า:</span>
+          </label>
+          <span class="text-[11px] font-semibold text-blue-700">เช่น คณิต ม.1, ไทย ม.4, วิทย์ ม.3</span>
+        </div>
+        <input type="text" id="aiUploadGradeInput" list="existingSetsList" required placeholder="พิมพ์ตั้งชื่อชุดข้อสอบ เช่น คณิต ม.1 หรือคลิกเลือกชุดเดิม..." class="w-full bg-white border-2 border-blue-300 rounded-xl px-4 py-2.5 text-base text-blue-900 font-bold placeholder-slate-400 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition shadow-xs">
+        <p class="text-[11px] text-slate-500 font-medium">
+          💡 ข้อสอบที่สกัดได้ทั้งหมดจะถูกจัดรวมเข้าในชุดข้อสอบชื่อนี้
+        </p>
+      </div>
+
+      <!-- 3 Import Format Tabs -->
+      <div class="space-y-3">
+        <div class="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100 border border-slate-200">
+          <button type="button" id="aiTabBtnPdf" onclick="switchAiUploadTab('pdf')" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 bg-white text-blue-700 shadow-sm">
+            <span>📄</span> ไฟล์ PDF
+          </button>
+          <button type="button" id="aiTabBtnImage" onclick="switchAiUploadTab('image')" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-900">
+            <span>🖼️</span> รูปภาพข้อสอบ (AI OCR)
+          </button>
+          <button type="button" id="aiTabBtnExcel" onclick="switchAiUploadTab('excel')" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-900">
+            <span>📊</span> Excel / ข้อความ
+          </button>
+        </div>
+
+        <!-- TAB CONTENT 1: PDF -->
+        <div id="aiTabContentPdf" class="space-y-3">
+          <div class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-2xl p-6 text-center space-y-3 bg-slate-50 hover:bg-blue-50/20 transition cursor-pointer" onclick="document.getElementById('aiPdfFileInput').click()">
+            <div class="text-4xl">📄</div>
+            <div class="space-y-1">
+              <span class="font-bold text-sm text-blue-600 hover:text-blue-800 underline block">
+                1. คลิกเพื่อเลือกไฟล์ PDF ข้อสอบ
+              </span>
+              <p class="text-xs text-slate-500 font-medium">รองรับเอกสาร PDF ข้อสอบทุกวิชา AI จะอ่านข้อความและแปลงสูตรเป็น LaTeX KaTeX</p>
+            </div>
+            <input type="file" id="aiPdfFileInput" accept=".pdf,application/pdf" onchange="handleAiPdfFileChosen(event)" class="hidden">
+            <div id="aiPdfSelectedName" class="text-xs font-bold text-blue-700 hidden pt-1"></div>
+          </div>
+
+          <div id="aiPdfActionBox" class="hidden text-center pt-1">
+            <button type="button" onclick="startAiPdfAnalysis()" class="w-full py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 font-heading font-black text-sm text-white shadow-lg shadow-blue-500/25 active:scale-[0.98] transition flex items-center justify-center gap-2">
+              <span>⚡ 2. เริ่มวิเคราะห์ไฟล์ PDF ด้วย AI (กดวิเคราะห์)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT 2: IMAGE (OCR VISION) -->
+        <div id="aiTabContentImage" class="hidden space-y-3">
+          <div class="border-2 border-dashed border-purple-300 hover:border-purple-500 rounded-2xl p-6 text-center space-y-3 bg-purple-50/30 hover:bg-purple-50/50 transition cursor-pointer" onclick="document.getElementById('aiImageFileInput').click()">
+            <div class="text-4xl">🖼️</div>
+            <div class="space-y-1">
+              <span class="font-bold text-sm text-purple-700 hover:text-purple-900 underline block">
+                1. คลิกเพื่อเลือกหรือถ่ายรูปภาพข้อสอบ / ใบงาน
+              </span>
+              <p class="text-xs text-slate-500 font-medium">รองรับไฟล์ PNG, JPG, JPEG, WEBP หรือภาพแคปหน้าจอ (AI Vision OCR สกัดข้อสอบทุกข้อในภาพ)</p>
+            </div>
+            <input type="file" id="aiImageFileInput" accept="image/*" onchange="handleAiImageFileChosen(event)" class="hidden">
+            <div id="aiImageSelectedName" class="text-xs font-bold text-purple-700 hidden pt-1"></div>
+          </div>
+
+          <div id="aiImagePreviewThumbnailBox" class="hidden text-center space-y-3">
+            <img id="aiImagePreviewThumbnail" src="" alt="ภาพพรีวิวข้อสอบ" class="max-h-56 max-w-full mx-auto rounded-2xl border-2 border-purple-200 shadow-sm object-contain bg-white p-2">
+            <div id="aiImageActionBox" class="pt-1">
+              <button type="button" onclick="startAiImageAnalysis()" class="w-full py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-700 font-heading font-black text-sm text-white shadow-lg shadow-purple-500/25 active:scale-[0.98] transition flex items-center justify-center gap-2">
+                <span>⚡ 2. เริ่มวิเคราะห์รูปภาพข้อสอบด้วย AI (กดวิเคราะห์)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT 3: EXCEL / CSV / TEXT -->
+        <div id="aiTabContentExcel" class="hidden space-y-3">
+          <div class="border-2 border-dashed border-emerald-300 hover:border-emerald-500 rounded-2xl p-6 text-center space-y-3 bg-emerald-50/30 hover:bg-emerald-50/50 transition cursor-pointer" onclick="document.getElementById('aiExcelFileInput').click()">
+            <div class="text-4xl">📊</div>
+            <div class="space-y-1">
+              <span class="font-bold text-sm text-emerald-700 hover:text-emerald-900 underline block">
+                1. คลิกเพื่อเลือกไฟล์ Excel หรือ CSV (.xlsx, .xls, .csv)
+              </span>
+              <p class="text-xs text-slate-500 font-medium">รองรับไฟล์ตาราง Excel ทุกเวอร์ชัน AI จะอ่านตารางและแปลงเป็นข้อสอบ KaTeX และเฉลยอัตโนมัติ</p>
+            </div>
+            <input type="file" id="aiExcelFileInput" accept=".xlsx,.xls,.csv,.tsv,.txt" onchange="handleAiExcelFileChosen(event)" class="hidden">
+            <div id="aiExcelSelectedName" class="text-xs font-bold text-emerald-700 hidden pt-1"></div>
+          </div>
+
+          <div id="aiExcelActionBox" class="hidden text-center pt-1">
+            <button type="button" onclick="startAiExcelAnalysis()" class="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 font-heading font-black text-sm text-white shadow-lg shadow-emerald-500/25 active:scale-[0.98] transition flex items-center justify-center gap-2">
+              <span>⚡ 2. เริ่มวิเคราะห์ตาราง Excel ด้วย AI (กดวิเคราะห์)</span>
+            </button>
+          </div>
+
+          <!-- Or Paste Formatted Text directly -->
+          <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <span>📝</span> หรือวางข้อความข้อสอบโดยตรง:
+              </label>
+              <span class="text-[10px] text-slate-500 font-semibold">[โจทย์] | [ก] | [ข] | [ค] | [ง] | [เฉลย]</span>
+            </div>
+            <textarea id="aiBulkTextInput" rows="3" placeholder="โจทย์ข้อ 1 | ชอยส์ ก | ชอยส์ ข | ชอยส์ ค | ชอยส์ ง | ก&#10;ถ้า $x+2=5$ จงหาค่า $x$ | 1 | 2 | 3 | 4 | ค" class="w-full bg-white border border-slate-300 rounded-xl p-3 text-xs text-slate-900 font-mono focus:outline-none focus:border-emerald-600 shadow-2xs"></textarea>
+            <div class="text-right">
+              <button type="button" onclick="handleProcessAiBulkText()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition">
+                ⚡ สกัดข้อสอบจากข้อความที่วาง
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Processing Status Indicator -->
+      <div id="aiProcessingStatus" class="hidden p-4 rounded-2xl bg-blue-50 border border-blue-200 text-center space-y-2">
+        <div class="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p class="text-xs font-bold text-blue-900" id="aiStatusText">AI กำลังวิเคราะห์และแปลงข้อสอบ...</p>
+      </div>
+
+      <!-- AI Extracted Preview Area -->
+      <div id="aiExtractedPreview" class="hidden space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-emerald-700 flex items-center gap-1.5">
+            <span>✅</span> สกัดข้อสอบสำเร็จแล้ว (ตรวจทานก่อนบันทึก):
+          </span>
+          <span id="aiExtractedCount" class="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full"></span>
+        </div>
+        <div id="aiExtractedList" class="max-h-72 overflow-y-auto space-y-2.5 p-2.5 rounded-2xl bg-slate-50 border border-slate-200"></div>
+      </div>
+
+      <!-- Footer Buttons (Step 3: Save) -->
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+        <button type="button" onclick="closeAiUploadModal()" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">ยกเลิก</button>
+        <button id="saveAiExtractedBtn" onclick="handleSaveAiExtractedQuestions()" disabled class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-heading font-black text-xs sm:text-sm text-white shadow-md shadow-emerald-200 opacity-50 cursor-not-allowed transition">
+          💾 3. บันทึกข้อสอบทั้งหมดลงระบบ (กดเซฟ)
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- FOOTER                                     -->
+  <!-- ========================================== -->
+  <footer class="w-full text-center py-4 text-xs text-slate-500 border-t border-slate-200 bg-white/50">
+    QuizLive Math - Online Mathematics Examination Platform with KaTeX & Cloudflare
+  </footer>
+
+  <!-- ======================================================= -->
+  <!-- JAVASCRIPT APPLICATION CORE LOGIC                       -->
+  <!-- ======================================================= -->
+  <script>
+    // Embedded API Key & Cloudflare Backend
+    const EMBEDDED_GEMINI_API_KEY = 'AQ.Ab8RN6KkcvPXRhcrmUQGPD4OV__HpKA1Eg4dxnQj8K3U_bSaZw';
+    const DEFAULT_CLOUDFLARE_BACKEND = 'https://quizlive-math-api.phubet-hppk.workers.dev';
+
+    // Empty start: No mock/test questions
+    const DEFAULT_QUESTIONS = [];
+
+    // ==========================================
+    // STATE MANAGEMENT (TEACHER ISOLATED)
+    // ==========================================
+    let questions = [];
+    let currentTeacher = null;
+    let activeExamSession = null;
+    let currentStudent = { name: '', no: '', room: '', grade: '', pin: '', teacherId: '' };
+    let currentQuizIndex = 0;
+    let studentAnswers = [];
+    let activeQuizQuestions = [];
+    let extractedQuestionsBuffer = [];
+    let questionTimerInterval = null;
+    let cloudBackendUrl = localStorage.getItem('quizlive_cloud_backend') || DEFAULT_CLOUDFLARE_BACKEND;
+
+    if (!localStorage.getItem('quizlive_cloud_backend')) {
+      localStorage.setItem('quizlive_cloud_backend', DEFAULT_CLOUDFLARE_BACKEND);
+    }
+
+    // ==========================================
+    // INITIALIZATION ON LOAD
+    // ==========================================
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Clear legacy global sample questions if any
+      localStorage.removeItem('quizlive_math_questions');
+
+      loadLocalData();
+      updateBackendStatusBadge();
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const roomParam = urlParams.get('room');
+      const gradeParam = urlParams.get('grade');
+
+      if (roomParam) {
+        await handleStudentDirectRoomEntry(roomParam, gradeParam);
+      } else if (currentTeacher) {
+        showTeacherDashboard();
+        if (cloudBackendUrl) {
+          await syncQuestionsFromCloud();
+        }
+      } else {
+        showTeacherAuthView();
+      }
+
+      renderMath();
+    });
+
+    function getTeacherStorageKey() {
+      const teacherId = currentTeacher ? currentTeacher.id : 'guest';
+      return `quizlive_math_questions_${teacherId}`;
+    }
+
+    function loadLocalData() {
+      const savedTeacher = localStorage.getItem('quizlive_current_teacher');
+      if (savedTeacher) {
+        try { currentTeacher = JSON.parse(savedTeacher); } catch(e){ currentTeacher = null; }
+      }
+
+      if (currentTeacher) {
+        const key = getTeacherStorageKey();
+        const savedQ = localStorage.getItem(key);
+        if (savedQ) {
+          try { questions = JSON.parse(savedQ); } catch (e) { questions = []; }
+        } else {
+          questions = [];
+        }
+      } else {
+        questions = [];
+      }
+
+      const savedSession = localStorage.getItem('quizlive_active_session');
+      if (savedSession) {
+        try { activeExamSession = JSON.parse(savedSession); } catch(e){}
+      }
+    }
+
+    function saveLocalData() {
+      if (currentTeacher) {
+        const key = getTeacherStorageKey();
+        localStorage.setItem(key, JSON.stringify(questions));
+      }
+    }
+
+    function updateBackendStatusBadge() {
+      const badge = document.getElementById('backendStatusBadge');
+      if (badge) {
+        if (cloudBackendUrl) {
+          badge.innerText = '☁️ Cloudflare Worker Connected';
+          badge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono font-medium';
+        } else {
+          badge.innerText = '⚡ Local Storage';
+          badge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-mono font-medium';
+        }
+      }
+    }
+
+    async function syncQuestionsFromCloud() {
+      if (!cloudBackendUrl || !currentTeacher) return;
+      try {
+        const cleanUrl = cloudBackendUrl.replace(/\/$/, '');
+        const res = await fetch(`${cleanUrl}/api/questions?teacherId=${encodeURIComponent(currentTeacher.id)}&grade=ALL`);
+        const data = await res.json();
+        if (data.success && data.questions) {
+          questions = data.questions;
+          saveLocalData();
+          populateTeacherGradeSelects();
+          renderTeacherQuestionList();
+          renderKPIStats();
+          renderExamSetsGrid();
+          renderTeachersManagementList();
+        }
+      } catch (err) {
+        console.warn('Could not sync from Cloud Backend, using local:', err);
+      }
+    }
+
+    async function syncQuestionsToCloud() {
+      if (!cloudBackendUrl || !currentTeacher) return;
+      try {
+        const cleanUrl = cloudBackendUrl.replace(/\/$/, '');
+        await fetch(`${cleanUrl}/api/questions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            teacherId: currentTeacher.id,
+            questions: questions
+          })
+        });
+      } catch (err) {
+        console.warn('Could not save to Cloud Backend:', err);
+      }
+    }
+
+    function renderMath(element) {
+      if (typeof renderMathInElement !== 'undefined') {
+        const target = element || document.body;
+        renderMathInElement(target, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false },
+            { left: '\\(', right: '\\)', display: false },
+            { left: '\\[', right: '\\]', display: true }
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    // ==========================================
+    // VIEW ROUTING
+    // ==========================================
+    function hideAllViews() {
+      document.getElementById('teacherAuthView').classList.add('hidden');
+      document.getElementById('teacherDashboardView').classList.add('hidden');
+      document.getElementById('studentRoomEntryView').classList.add('hidden');
+      document.getElementById('studentQuizView').classList.add('hidden');
+      document.getElementById('studentResultView').classList.add('hidden');
+    }
+
+    function handleLogoClick() {
+      if (currentTeacher) {
+        showTeacherDashboard();
+      } else {
+        showTeacherAuthView();
+      }
+    }
+
+    function showTeacherAuthView() {
+      hideAllViews();
+      document.getElementById('teacherAuthView').classList.remove('hidden');
+      const heroWelcome = document.getElementById('heroWelcomeBox');
+      if (heroWelcome) heroWelcome.classList.remove('hidden');
+
+      const pinInput = document.getElementById('teacherLoginPinInput');
+      if (pinInput) {
+        pinInput.value = '';
+        setTimeout(() => pinInput.focus(), 50);
+      }
+      document.getElementById('headerActions').innerHTML = `
+        <button onclick="showManualStudentPinModal()" class="px-3.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs font-semibold backdrop-blur-md transition flex items-center gap-1.5">
+          <span>🧑‍🎓</span> สำหรับนักเรียน
+        </button>
+      `;
+    }
+
+    function showTeacherDashboard() {
+      hideAllViews();
+      document.getElementById('teacherDashboardView').classList.remove('hidden');
+      const heroWelcome = document.getElementById('heroWelcomeBox');
+      if (heroWelcome) heroWelcome.classList.add('hidden');
+
+      const isAdmin = (currentTeacher && currentTeacher.id === 'admin');
+
+      // 1. Update Header and Name Display
+      document.getElementById('teacherNameDisplay').innerText = isAdmin 
+        ? '● ผู้ดูแลระบบ (Admin)' 
+        : `● คุณครู${currentTeacher ? currentTeacher.name : ''}`;
+
+      document.getElementById('headerActions').innerHTML = `
+        <span class="text-xs font-semibold text-blue-100 hidden sm:inline">
+          ${isAdmin ? '👑 แอดมินระบบ' : '👤 ครู' + (currentTeacher ? currentTeacher.name : '')}
+        </span>
+        <button onclick="logoutTeacher()" class="px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs font-bold transition">
+          ออกจากระบบ
+        </button>
+      `;
+
+      // 2. Hide Admin Features for Regular Teachers
+      const tabBtnTeachers = document.getElementById('tabBtnTeachers');
+      const tabContentTeachers = document.getElementById('tabContentTeachers');
+      if (tabBtnTeachers) {
+        if (isAdmin) {
+          tabBtnTeachers.classList.remove('hidden');
+        } else {
+          tabBtnTeachers.classList.add('hidden');
+          if (tabContentTeachers) tabContentTeachers.classList.add('hidden');
+        }
+      }
+
+      // 3. Update Dashboard Titles according to Role
+      const tabTitleSets = document.getElementById('tabTitleSets');
+      const tabSubTitleSets = document.getElementById('tabSubTitleSets');
+      const tabTitleQuestions = document.getElementById('tabTitleQuestions');
+
+      if (tabTitleSets) {
+        tabTitleSets.innerHTML = isAdmin 
+          ? '<span>📚</span> ชุดข้อสอบทั้งหมดในระบบ' 
+          : `<span>📚</span> ชุดข้อสอบของคุณครู ${currentTeacher ? currentTeacher.name : ''}`;
+      }
+      if (tabSubTitleSets) {
+        tabSubTitleSets.innerText = isAdmin 
+          ? 'แบ่งแยกตามวิชาและระดับชั้นชัดเจน เช่น คณิต ม.1, คณิต ม.2, ไทย ม.4 ถือเป็นคนละชุด' 
+          : 'ชุดข้อสอบที่คุณครูสร้างและดูแล สามารถเปิดสอบสดหรือจัดการได้ที่นี่';
+      }
+      if (tabTitleQuestions) {
+        tabTitleQuestions.innerText = isAdmin 
+          ? 'รายการข้อสอบในระบบ' 
+          : `รายการข้อสอบของคุณครู ${currentTeacher ? currentTeacher.name : ''}`;
+      }
+
+      updateBackendStatusBadge();
+      populateTeacherGradeSelects();
+      renderTeacherQuestionList();
+      renderKPIStats();
+      renderExamSetsGrid();
+
+      if (isAdmin) {
+        renderTeachersManagementList();
+      } else {
+        // Ensure regular teacher is always on 'sets' tab on initial load
+        switchDashboardTab('sets');
+      }
+    }
+
+    // ==========================================
+    // DASHBOARD SUB-NAVIGATION TABS
+    // ==========================================
+    function switchDashboardTab(tabName) {
+      const isAdmin = (currentTeacher && currentTeacher.id === 'admin');
+
+      // Prevent non-admin teachers from entering teacher management tab
+      if (tabName === 'teachers' && !isAdmin) {
+        tabName = 'sets';
+      }
+
+      const setsTab = document.getElementById('tabContentSets');
+      const teachersTab = document.getElementById('tabContentTeachers');
+      const questionsTab = document.getElementById('tabContentQuestions');
+
+      const btnSets = document.getElementById('tabBtnSets');
+      const btnTeachers = document.getElementById('tabBtnTeachers');
+      const btnQuestions = document.getElementById('tabBtnQuestions');
+
+      if (!setsTab || !teachersTab || !questionsTab) return;
+
+      // Hide all containers
+      setsTab.classList.add('hidden');
+      teachersTab.classList.add('hidden');
+      questionsTab.classList.add('hidden');
+
+      // Reset button styles
+      const inactiveBtnClass = 'flex-1 min-w-[130px] py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition flex items-center justify-center gap-1.5';
+      const activeBtnClass = 'flex-1 min-w-[130px] py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm';
+
+      btnSets.className = inactiveBtnClass;
+      btnTeachers.className = inactiveBtnClass;
+      btnQuestions.className = inactiveBtnClass;
+
+      if (tabName === 'sets') {
+        setsTab.classList.remove('hidden');
+        btnSets.className = activeBtnClass;
+        renderExamSetsGrid();
+      } else if (tabName === 'teachers' && isAdmin) {
+        teachersTab.classList.remove('hidden');
+        btnTeachers.className = activeBtnClass;
+        renderTeachersManagementList();
+      } else if (tabName === 'questions') {
+        questionsTab.classList.remove('hidden');
+        btnQuestions.className = activeBtnClass;
+        renderTeacherQuestionList();
+      }
+      renderKPIStats();
+    }
+
+    // ==========================================
+    // SUBJECT DETECTION & THEMING
+    // ==========================================
+    function getSubjectInfo(setName) {
+      if (!setName) setName = 'ชุดข้อสอบทั่วไป';
+      const clean = setName.trim();
+      const lower = clean.toLowerCase();
+
+      if (lower.includes('ไทย')) {
+        return {
+          subject: 'ภาษาไทย',
+          short: 'ไทย',
+          icon: '📖',
+          badgeClass: 'bg-amber-50 text-amber-800 border-amber-200',
+          cardBg: 'bg-gradient-to-br from-amber-50/40 via-white to-amber-50/20',
+          borderClass: 'border-slate-200 hover:border-amber-300',
+          textClass: 'text-amber-800',
+          btnClass: 'bg-amber-600 hover:bg-amber-700 text-white'
+        };
+      } else if (lower.includes('ฟิสิกส์') || lower.includes('physics')) {
+        return {
+          subject: 'ฟิสิกส์',
+          short: 'ฟิสิกส์',
+          icon: '⚛️',
+          badgeClass: 'bg-cyan-50 text-cyan-800 border-cyan-200',
+          cardBg: 'bg-gradient-to-br from-cyan-50/40 via-white to-cyan-50/20',
+          borderClass: 'border-slate-200 hover:border-cyan-300',
+          textClass: 'text-cyan-800',
+          btnClass: 'bg-cyan-600 hover:bg-cyan-700 text-white'
+        };
+      } else if (lower.includes('เคมี') || lower.includes('chem')) {
+        return {
+          subject: 'เคมี',
+          short: 'เคมี',
+          icon: '🧪',
+          badgeClass: 'bg-teal-50 text-teal-800 border-teal-200',
+          cardBg: 'bg-gradient-to-br from-teal-50/40 via-white to-teal-50/20',
+          borderClass: 'border-slate-200 hover:border-teal-300',
+          textClass: 'text-teal-800',
+          btnClass: 'bg-teal-600 hover:bg-teal-700 text-white'
+        };
+      } else if (lower.includes('ชีว') || lower.includes('bio')) {
+        return {
+          subject: 'ชีววิทยา',
+          short: 'ชีววิทยา',
+          icon: '🧬',
+          badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+          cardBg: 'bg-gradient-to-br from-emerald-50/40 via-white to-emerald-50/20',
+          borderClass: 'border-slate-200 hover:border-emerald-300',
+          textClass: 'text-emerald-800',
+          btnClass: 'bg-emerald-600 hover:bg-emerald-700 text-white'
+        };
+      } else if (lower.includes('วิทย์') || lower.includes('sci')) {
+        return {
+          subject: 'วิทยาศาสตร์',
+          short: 'วิทย์',
+          icon: '🔬',
+          badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+          cardBg: 'bg-gradient-to-br from-emerald-50/40 via-white to-emerald-50/20',
+          borderClass: 'border-slate-200 hover:border-emerald-300',
+          textClass: 'text-emerald-800',
+          btnClass: 'bg-emerald-600 hover:bg-emerald-700 text-white'
+        };
+      } else if (lower.includes('อังกฤษ') || lower.includes('eng')) {
+        return {
+          subject: 'ภาษาอังกฤษ',
+          short: 'อังกฤษ',
+          icon: '🇬🇧',
+          badgeClass: 'bg-purple-50 text-purple-800 border-purple-200',
+          cardBg: 'bg-gradient-to-br from-purple-50/40 via-white to-purple-50/20',
+          borderClass: 'border-slate-200 hover:border-purple-300',
+          textClass: 'text-purple-800',
+          btnClass: 'bg-purple-600 hover:bg-purple-700 text-white'
+        };
+      } else if (lower.includes('คอม') || lower.includes('คำนวณ') || lower.includes('tech') || lower.includes('cs')) {
+        return {
+          subject: 'วิทยาการคำนวณ/คอมพิวเตอร์',
+          short: 'คอมฯ',
+          icon: '💻',
+          badgeClass: 'bg-indigo-50 text-indigo-800 border-indigo-200',
+          cardBg: 'bg-gradient-to-br from-indigo-50/40 via-white to-indigo-50/20',
+          borderClass: 'border-slate-200 hover:border-indigo-300',
+          textClass: 'text-indigo-800',
+          btnClass: 'bg-indigo-600 hover:bg-indigo-700 text-white'
+        };
+      } else if (lower.includes('ประวัติ')) {
+        return {
+          subject: 'ประวัติศาสตร์',
+          short: 'ประวัติศาสตร์',
+          icon: '🏛️',
+          badgeClass: 'bg-amber-50 text-amber-900 border-amber-300',
+          cardBg: 'bg-gradient-to-br from-amber-50/40 via-white to-amber-50/20',
+          borderClass: 'border-slate-200 hover:border-amber-400',
+          textClass: 'text-amber-900',
+          btnClass: 'bg-amber-700 hover:bg-amber-800 text-white'
+        };
+      } else if (lower.includes('สังคม')) {
+        return {
+          subject: 'สังคมศึกษา',
+          short: 'สังคม',
+          icon: '🌍',
+          badgeClass: 'bg-orange-50 text-orange-800 border-orange-200',
+          cardBg: 'bg-gradient-to-br from-orange-50/40 via-white to-orange-50/20',
+          borderClass: 'border-slate-200 hover:border-orange-300',
+          textClass: 'text-orange-800',
+          btnClass: 'bg-orange-600 hover:bg-orange-700 text-white'
+        };
+      } else if (lower.includes('สุข') || lower.includes('พล')) {
+        return {
+          subject: 'สุขศึกษาและพลศึกษา',
+          short: 'สุขศึกษา',
+          icon: '🏃',
+          badgeClass: 'bg-rose-50 text-rose-800 border-rose-200',
+          cardBg: 'bg-gradient-to-br from-rose-50/40 via-white to-rose-50/20',
+          borderClass: 'border-slate-200 hover:border-rose-300',
+          textClass: 'text-rose-800',
+          btnClass: 'bg-rose-600 hover:bg-rose-700 text-white'
+        };
+      } else if (lower.includes('ศิลปะ') || lower.includes('ดนตรี') || lower.includes('นาฏศิลป์')) {
+        return {
+          subject: 'ศิลปะ/ดนตรี',
+          short: 'ศิลปะ',
+          icon: '🎨',
+          badgeClass: 'bg-pink-50 text-pink-800 border-pink-200',
+          cardBg: 'bg-gradient-to-br from-pink-50/40 via-white to-pink-50/20',
+          borderClass: 'border-slate-200 hover:border-pink-300',
+          textClass: 'text-pink-800',
+          btnClass: 'bg-pink-600 hover:bg-pink-700 text-white'
+        };
+      } else if (lower.includes('การงาน') || lower.includes('อาชีพ')) {
+        return {
+          subject: 'การงานอาชีพ',
+          short: 'การงาน',
+          icon: '🛠️',
+          badgeClass: 'bg-stone-100 text-stone-800 border-stone-300',
+          cardBg: 'bg-gradient-to-br from-stone-50 via-white to-stone-50/20',
+          borderClass: 'border-slate-200 hover:border-stone-400',
+          textClass: 'text-stone-800',
+          btnClass: 'bg-stone-700 hover:bg-stone-800 text-white'
+        };
+      } else if (lower.includes('คณิต') || lower.includes('math')) {
+        return {
+          subject: 'คณิตศาสตร์',
+          short: 'คณิต',
+          icon: '📐',
+          badgeClass: 'bg-blue-50 text-blue-800 border-blue-200',
+          cardBg: 'bg-gradient-to-br from-blue-50/40 via-white to-blue-50/20',
+          borderClass: 'border-slate-200 hover:border-blue-300',
+          textClass: 'text-blue-800',
+          btnClass: 'bg-blue-600 hover:bg-blue-700 text-white'
+        };
+      } else {
+        const parts = clean.split(' ');
+        const subj = parts[0] || 'วิชาทั่วไป';
+        return {
+          subject: subj,
+          short: subj,
+          icon: '📝',
+          badgeClass: 'bg-slate-50 text-slate-800 border-slate-200',
+          cardBg: 'bg-white',
+          borderClass: 'border-slate-200 hover:border-slate-400',
+          textClass: 'text-slate-800',
+          btnClass: 'bg-slate-700 hover:bg-slate-800 text-white'
+        };
+      }
+    }
+
+    // ==========================================
+    // AGGREGATION & DATA HELPERS (STRICT ISOLATION)
+    // ==========================================
+    function getAllRegisteredTeachers() {
+      return JSON.parse(localStorage.getItem('quizlive_registered_teachers') || '[]');
+    }
+
+    function getAllSystemQuestions() {
+      if (currentTeacher && currentTeacher.id === 'admin') {
+        const teachers = getAllRegisteredTeachers();
+        let allQ = [];
+        const adminKey = 'quizlive_math_questions_admin';
+        const adminQ = JSON.parse(localStorage.getItem(adminKey) || '[]');
+        allQ = allQ.concat(adminQ);
+        
+        teachers.forEach(t => {
+          const tKey = `quizlive_math_questions_${t.id}`;
+          const tQ = JSON.parse(localStorage.getItem(tKey) || '[]');
+          tQ.forEach(q => {
+            if (!allQ.some(x => x.id === q.id)) {
+              allQ.push(q);
+            }
+          });
+        });
+
+        if (questions && questions.length > 0) {
+          questions.forEach(q => {
+            if (!allQ.some(x => x.id === q.id)) {
+              allQ.push(q);
+            }
+          });
+        }
+        return allQ;
+      } else {
+        // Regular Teacher only sees their own questions
+        return questions || [];
+      }
+    }
+
+    function computeExamSets(qList) {
+      const isAdmin = (currentTeacher && currentTeacher.id === 'admin');
+      const list = qList || (isAdmin ? getAllSystemQuestions() : questions);
+      const setsMap = {};
+
+      list.forEach(q => {
+        const setName = (q.grade || 'ทั่วไป').trim();
+        if (!setsMap[setName]) {
+          setsMap[setName] = {
+            name: setName,
+            info: getSubjectInfo(setName),
+            questions: [],
+            teachers: new Set(),
+            imageCount: 0
+          };
+        }
+        setsMap[setName].questions.push(q);
+        if (q.teacherId) setsMap[setName].teachers.add(q.teacherId);
+        if (q.image) setsMap[setName].imageCount++;
+      });
+
+      return Object.values(setsMap).sort((a, b) => {
+        if (a.info.subject === b.info.subject) {
+          return a.name.localeCompare(b.name, 'th');
+        }
+        return a.info.subject.localeCompare(b.info.subject, 'th');
+      });
+    }
+
+    // ==========================================
+    // KPI STATS RENDERING (ROLE-ADAPTIVE)
+    // ==========================================
+    function renderKPIStats() {
+      const isAdmin = (currentTeacher && currentTeacher.id === 'admin');
+      const teachers = getAllRegisteredTeachers();
+      const currentQList = isAdmin ? getAllSystemQuestions() : questions;
+      const examSets = computeExamSets(currentQList);
+
+      // Card 1: Teachers or Teacher Profile Card
+      const statTeacherTitle = document.getElementById('statTeacherTitle');
+      const statTeacherIcon = document.getElementById('statTeacherIcon');
+      const statTeachersEl = document.getElementById('statTotalTeachers');
+      const statTeacherUnit = document.getElementById('statTeacherUnit');
+      const statTeacherSubtext = document.getElementById('statTeacherSubtext');
+      const statCardTeachers = document.getElementById('statCardTeachers');
+
+      if (isAdmin) {
+        if (statTeacherTitle) statTeacherTitle.innerText = 'ครูที่ลงทะเบียน';
+        if (statTeacherIcon) statTeacherIcon.innerText = '👥';
+        if (statTeachersEl) statTeachersEl.innerText = teachers.length + 1;
+        if (statTeacherUnit) statTeacherUnit.innerText = 'คน';
+        if (statTeacherSubtext) statTeacherSubtext.innerHTML = '<span>ดูข้อมูลครู</span> <span>➔</span>';
+        if (statCardTeachers) {
+          statCardTeachers.onclick = () => switchDashboardTab('teachers');
+          statCardTeachers.className = 'bg-white rounded-2xl p-4 border border-slate-100 card-shadow hover:border-purple-300 hover:shadow-md transition cursor-pointer space-y-1';
+        }
+      } else {
+        if (statTeacherTitle) statTeacherTitle.innerText = 'บัญชีครูผู้สอน';
+        if (statTeacherIcon) statTeacherIcon.innerText = '👨‍🏫';
+        if (statTeachersEl) statTeachersEl.innerText = currentTeacher ? currentTeacher.name : 'คุณครู';
+        if (statTeacherUnit) statTeacherUnit.innerText = '';
+        if (statTeacherSubtext) statTeacherSubtext.innerHTML = `<span class="text-purple-700 font-mono font-bold">🔑 รหัส PIN: ${currentTeacher ? currentTeacher.pin : '-'}</span>`;
+        if (statCardTeachers) {
+          statCardTeachers.onclick = () => switchDashboardTab('sets');
+          statCardTeachers.className = 'bg-white rounded-2xl p-4 border border-slate-100 card-shadow space-y-1';
+        }
+      }
+
+      // Card 2: Total Exam Sets
+      const statSetsLabel = document.getElementById('statSetsLabel');
+      if (statSetsLabel) statSetsLabel.innerText = isAdmin ? 'ชุดข้อสอบทั้งหมด' : 'ชุดข้อสอบของฉัน';
+      const statSetsEl = document.getElementById('statTotalSets');
+      if (statSetsEl) statSetsEl.innerText = examSets.length;
+
+      // Card 3: Total Questions
+      const statQuestionsLabel = document.getElementById('statQuestionsLabel');
+      if (statQuestionsLabel) statQuestionsLabel.innerText = isAdmin ? 'ข้อสอบทั้งหมด' : 'ข้อสอบของฉัน';
+      const statQuestionsEl = document.getElementById('statTotalQuestions');
+      if (statQuestionsEl) statQuestionsEl.innerText = currentQList.length;
+
+      // Card 4: Total Subjects and Badges
+      const statSubjectsLabel = document.getElementById('statSubjectsLabel');
+      if (statSubjectsLabel) statSubjectsLabel.innerText = isAdmin ? 'กลุ่มวิชาในระบบ' : 'กลุ่มวิชาของฉัน';
+
+      const subjectsMap = {};
+      examSets.forEach(s => {
+        const subjName = s.info.subject;
+        if (!subjectsMap[subjName]) {
+          subjectsMap[subjName] = { count: 0, icon: s.info.icon, badgeClass: s.info.badgeClass };
+        }
+        subjectsMap[subjName].count++;
+      });
+
+      const uniqueSubjectNames = Object.keys(subjectsMap);
+      const statSubjectsEl = document.getElementById('statTotalSubjects');
+      if (statSubjectsEl) statSubjectsEl.innerText = uniqueSubjectNames.length;
+
+      const badgesContainer = document.getElementById('statSubjectsBadges');
+      if (badgesContainer) {
+        if (uniqueSubjectNames.length === 0) {
+          badgesContainer.innerHTML = '<span class="text-[10px] text-slate-400">ยังไม่มีชุดข้อสอบ</span>';
+        } else {
+          badgesContainer.innerHTML = uniqueSubjectNames.map(subj => {
+            const item = subjectsMap[subj];
+            return `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold border ${item.badgeClass} flex items-center gap-1">${item.icon} ${subj} (${item.count})</span>`;
+          }).join('');
+        }
+      }
+
+      // Tab labels & count badges
+      const tabBtnSetsLabel = document.getElementById('tabBtnSetsLabel');
+      if (tabBtnSetsLabel) tabBtnSetsLabel.innerText = isAdmin ? 'ชุดข้อสอบ' : 'ชุดข้อสอบของฉัน';
+      const bSets = document.getElementById('badgeSetsCount');
+      if (bSets) bSets.innerText = examSets.length;
+
+      const bTeachers = document.getElementById('badgeTeachersCount');
+      if (bTeachers) bTeachers.innerText = teachers.length + 1;
+
+      const tabBtnQuestionsLabel = document.getElementById('tabBtnQuestionsLabel');
+      if (tabBtnQuestionsLabel) tabBtnQuestionsLabel.innerText = isAdmin ? 'คลังข้อสอบ' : 'คลังข้อสอบของฉัน';
+      const bQuestions = document.getElementById('badgeQuestionsCount');
+      if (bQuestions) bQuestions.innerText = currentQList.length;
+    }
+
+    // ==========================================
+    // EXAM SETS GRID RENDERING
+    // ==========================================
+    function renderExamSetsGrid() {
+      const grid = document.getElementById('examSetsGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const isAdmin = (currentTeacher && currentTeacher.id === 'admin');
+      const currentQList = isAdmin ? getAllSystemQuestions() : questions;
+      const examSets = computeExamSets(currentQList);
+
+      if (examSets.length === 0) {
+        const teacherName = currentTeacher ? currentTeacher.name : 'คุณครู';
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-12 px-4 rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 space-y-4">
+            <div class="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 text-3xl flex items-center justify-center mx-auto shadow-sm">
+              📚
+            </div>
+            <div class="space-y-1">
+              <h4 class="font-heading font-black text-base text-slate-800">${isAdmin ? 'ยังไม่มีชุดข้อสอบในระบบ' : 'คุณครู ' + teacherName + ' ยังไม่มีชุดข้อสอบ'}</h4>
+              <p class="text-xs text-slate-500 max-w-sm mx-auto font-medium">
+                เพิ่มชุดข้อสอบใหม่ได้ง่ายๆ เช่น "คณิต ม.1", "คณิต ม.2", หรือ "ไทย ม.4" ผ่านปุ่มด้านล่าง
+              </p>
+            </div>
+            <div class="flex items-center justify-center gap-3 pt-2 flex-wrap">
+              <button onclick="openAddQuestionChoiceModal()" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 font-heading font-bold text-xs text-white shadow-md shadow-blue-200 transition">
+                ➕ เพิ่มชุดข้อสอบแรก
+              </button>
+              <button onclick="openAiUploadModal()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200 text-blue-800 font-heading font-bold text-xs transition">
+                ⚡ นำเข้าไฟล์ด้วย AI
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      examSets.forEach(s => {
+        const card = document.createElement('div');
+        card.className = `p-5 rounded-2xl border ${s.info.borderClass} ${s.info.cardBg} transition hover:shadow-md space-y-4 flex flex-col justify-between`;
+        
+        card.innerHTML = `
+          <div class="space-y-3">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="w-8 h-8 rounded-xl ${s.info.badgeClass} flex items-center justify-center text-base font-bold shadow-xs">
+                  ${s.info.icon}
+                </span>
+                <div>
+                  <span class="px-2 py-0.5 rounded-md text-[11px] font-bold border ${s.info.badgeClass}">
+                    ${s.info.subject}
+                  </span>
+                </div>
+              </div>
+              <span class="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-black">
+                ${s.questions.length} ข้อ
+              </span>
+            </div>
+
+            <div>
+              <h4 class="font-heading font-black text-lg text-slate-900 tracking-tight">
+                ${s.name}
+              </h4>
+              <p class="text-xs text-slate-500 font-medium">
+                ชุดข้อสอบ ${s.name} ${s.imageCount > 0 ? `• 🖼️ มีรูป ${s.imageCount} ข้อ` : ''}
+              </p>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-100 flex items-center gap-2">
+            <button onclick="quickOpenSetLive('${encodeURIComponent(s.name)}')" class="flex-1 py-2 px-3 rounded-xl ${s.info.btnClass} font-heading font-bold text-xs shadow-sm transition flex items-center justify-center gap-1.5">
+              <span>🚀</span> เปิดสอบสด (Live)
+            </button>
+            <button onclick="quickFilterSetQuestions('${encodeURIComponent(s.name)}')" class="p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold transition" title="ดูรายการข้อสอบในชุดนี้">
+              <span>📝</span>
+            </button>
+            <button onclick="quickAddQuestionForSet('${encodeURIComponent(s.name)}')" class="p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-blue-700 text-xs font-bold transition" title="เพิ่มข้อสอบในชุดนี้">
+              <span>➕</span>
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // ==========================================
+    // TEACHERS MANAGEMENT LIST RENDERING (ADMIN ONLY)
+    // ==========================================
+    function renderTeachersManagementList() {
+      const container = document.getElementById('teachersListContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const isAdmin = (currentTeacher && currentTeacher.id === 'admin');
+      if (!isAdmin) return; // Strict security: do not render for regular teachers
+
+      const teachers = getAllRegisteredTeachers();
+      const allQ = getAllSystemQuestions();
+
+      // 1. Admin System Account Card
+      const adminCard = document.createElement('div');
+      adminCard.className = 'p-5 rounded-2xl bg-gradient-to-r from-blue-50/80 via-indigo-50/50 to-white border-2 border-blue-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm';
+      adminCard.innerHTML = `
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-xl font-bold shadow-md shadow-blue-200">
+            👑
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h4 class="font-heading font-black text-base text-slate-900">แอดมินระบบ (System Admin)</h4>
+              <span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-black uppercase tracking-wider">ผู้ดูแลระบบ</span>
+            </div>
+            <div class="text-xs text-slate-500 font-medium flex items-center gap-3 mt-0.5 flex-wrap">
+              <span class="text-blue-700 font-bold font-mono">🔑 PIN: 0000</span>
+              <span class="text-emerald-700 font-bold">📝 รวม ${allQ.length} ข้อในระบบ</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="px-3 py-1.5 rounded-xl bg-white border border-blue-200 text-blue-800 text-xs font-bold shadow-xs">
+            🛡️ สิทธิ์ควบคุมสูงสุด
+          </span>
+        </div>
+      `;
+      container.appendChild(adminCard);
+
+      // 2. Registered Teachers List
+      if (teachers.length === 0) {
+        const emptyDiv = document.createElement('div');
+        emptyDiv.className = 'text-center py-8 px-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2';
+        emptyDiv.innerHTML = `
+          <div class="text-2xl">👥</div>
+          <div class="text-xs font-bold text-slate-700">ยังไม่มีคุณครูลงทะเบียนเพิ่มเติม</div>
+          <div class="text-[11px] text-slate-500">สามารถกดปุ่ม "ลงทะเบียนครูเพิ่ม" ด้านบนเพื่อเพิ่มบัญชีครูผู้สอนท่านอื่น</div>
+        `;
+        container.appendChild(emptyDiv);
+        return;
+      }
+
+      teachers.forEach((t) => {
+        const teacherQ = allQ.filter(q => q.teacherId === t.id);
+        const tSets = computeExamSets(teacherQ);
+        const setNames = tSets.map(s => s.name).join(', ') || 'ยังไม่มีข้อสอบ';
+
+        const card = document.createElement('div');
+        card.className = 'p-5 rounded-2xl bg-white hover:bg-slate-50/70 border border-slate-200 transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm';
+        
+        card.innerHTML = `
+          <div class="flex items-center gap-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 border border-purple-200 text-purple-700 flex items-center justify-center text-xl font-bold">
+              👨‍🏫
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h4 class="font-heading font-black text-base text-slate-900">${t.name}</h4>
+                <span class="px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 text-[10px] font-bold border border-purple-200">คุณครู</span>
+              </div>
+              <div class="text-xs text-slate-500 font-medium flex items-center gap-3 mt-0.5 flex-wrap">
+                <span class="text-purple-700 font-bold font-mono bg-purple-50 px-2 py-0.5 rounded-md border border-purple-200">🔑 PIN: ${t.pin}</span>
+                <span class="text-blue-700 font-bold">📝 ข้อสอบ ${teacherQ.length} ข้อ</span>
+                <span class="text-slate-600 font-medium truncate max-w-xs">📚 ดูแลชุด: ${setNames}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 self-end sm:self-center">
+            <button onclick="deleteTeacherByAdmin('${t.id}')" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition flex items-center gap-1">
+              <span>🗑️</span> ลบบัญชี
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // ==========================================
+    // QUICK SET ACTIONS & HELPERS
+    // ==========================================
+    function quickOpenSetLive(encodedSetName) {
+      const setName = decodeURIComponent(encodedSetName);
+      populateTeacherGradeSelects();
+      const sessionSelect = document.getElementById('sessionGradeSelect');
+      if (sessionSelect) {
+        sessionSelect.value = setName;
+      }
+      openLiveSessionModal();
+      generateLiveSessionQR();
+    }
+
+    function quickFilterSetQuestions(encodedSetName) {
+      const setName = decodeURIComponent(encodedSetName);
+      switchDashboardTab('questions');
+      const filterSelect = document.getElementById('teacherGradeFilter');
+      if (filterSelect) {
+        filterSelect.value = setName;
+        renderTeacherQuestionList();
+      }
+    }
+
+    function quickAddQuestionForSet(encodedSetName) {
+      const setName = decodeURIComponent(encodedSetName);
+      openAddQuestionModal();
+      const gradeInput = document.getElementById('qGradeInput');
+      if (gradeInput) {
+        gradeInput.value = setName;
+      }
+    }
+
+    function deleteTeacherByAdmin(teacherId) {
+      if (!currentTeacher || currentTeacher.id !== 'admin') {
+        alert('เฉพาะผู้ดูแลระบบ (Admin) เท่านั้นที่สามารถจัดการบัญชีครูได้');
+        return;
+      }
+
+      const teachers = getAllRegisteredTeachers();
+      const target = teachers.find(t => t.id === teacherId);
+      if (!target) return;
+
+      if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบบัญชีคุณครู "${target.name}"?`)) {
+        const updated = teachers.filter(t => t.id !== teacherId);
+        localStorage.setItem('quizlive_registered_teachers', JSON.stringify(updated));
+        localStorage.removeItem(`quizlive_math_questions_${teacherId}`);
+        renderKPIStats();
+        renderTeachersManagementList();
+        renderExamSetsGrid();
+        alert(`ลบบัญชีคุณครู "${target.name}" เรียบร้อยแล้ว`);
+      }
+    }
+
+    // Dynamic Datalist Suggester for Exam Sets (สร้างจากชุดข้อสอบที่มีอยู่จริงของคุณครูเท่านั้น)
+    function populateDatalistSets() {
+      const datalist = document.getElementById('existingSetsList');
+      if (!datalist) return;
+
+      const existingGrades = getUniqueGrades();
+      if (existingGrades.length === 0) {
+        datalist.innerHTML = '';
+      } else {
+        datalist.innerHTML = existingGrades.map(s => `<option value="${s}">`).join('');
+      }
+    }
+
+    function handleTimerOptionChange() {
+      const isTimed = document.getElementById('timerOptYes').checked;
+      const container = document.getElementById('timeLimitInputContainer');
+      const help = document.getElementById('timerStatusHelp');
+      if (isTimed) {
+        container.classList.remove('hidden');
+        container.classList.add('flex');
+        help.innerText = 'กำหนดจำนวนวินาทีต่อข้อ';
+        const input = document.getElementById('qTimeLimitInput');
+        if (!input.value || parseInt(input.value) <= 0) {
+          input.value = '30';
+        }
+      } else {
+        container.classList.add('hidden');
+        container.classList.remove('flex');
+        help.innerText = 'ไม่จำกัดเวลาในการทำข้อสอบ';
+      }
+    }
+
+    function setQuickSeconds(sec) {
+      const input = document.getElementById('qTimeLimitInput');
+      if (input) {
+        input.value = sec;
+      }
+    }
+
+    // ==========================================
+    // TEACHER AUTH (PIN ONLY ENTRY & ADMIN 0000)
+    // ==========================================
+    function openTeacherRegisterModal() {
+      document.getElementById('teacherRegNameInput').value = '';
+      document.getElementById('teacherRegPinInput').value = '';
+      document.getElementById('teacherRegisterModal').classList.remove('hidden');
+      document.getElementById('teacherRegisterModal').classList.add('flex');
+    }
+
+    function closeTeacherRegisterModal() {
+      document.getElementById('teacherRegisterModal').classList.add('hidden');
+      document.getElementById('teacherRegisterModal').classList.remove('flex');
+    }
+
+    async function handleTeacherLogin(e) {
+      e.preventDefault();
+      const inputPin = document.getElementById('teacherLoginPinInput').value.trim();
+
+      if (!inputPin) {
+        alert('กรุณากรอกรหัส PIN');
+        return;
+      }
+
+      // 1. Hardcoded Admin PIN: 0000
+      if (inputPin === '0000') {
+        currentTeacher = {
+          id: 'admin',
+          name: 'แอดมิน / ผู้ดูแลระบบ',
+          pin: '0000'
+        };
+        localStorage.setItem('quizlive_current_teacher', JSON.stringify(currentTeacher));
+        loadLocalData();
+        showTeacherDashboard();
+        await syncQuestionsFromCloud();
+        return;
+      }
+
+      // 2. Check registered teachers
+      const teachers = JSON.parse(localStorage.getItem('quizlive_registered_teachers') || '[]');
+      const teacher = teachers.find(t => t.pin === inputPin);
+
+      if (teacher) {
+        currentTeacher = teacher;
+        localStorage.setItem('quizlive_current_teacher', JSON.stringify(currentTeacher));
+        loadLocalData();
+        showTeacherDashboard();
+        await syncQuestionsFromCloud();
+      } else {
+        alert('❌ รหัส PIN ไม่ถูกต้อง\n\n- หากเป็นผู้ดูแลระบบ ให้ใช้รหัส: 0000\n- หรือกดปุ่ม "ลงทะเบียนครูใหม่" ด้านล่างเพื่อตั้งชื่อและกำหนดรหัส PIN ประจำตัว');
+      }
+    }
+
+    async function handleTeacherRegister(e) {
+      e.preventDefault();
+      const name = document.getElementById('teacherRegNameInput').value.trim() || 'คุณครู';
+      const pin = document.getElementById('teacherRegPinInput').value.trim();
+
+      if (!pin) {
+        alert('กรุณากำหนดรหัส PIN');
+        return;
+      }
+
+      if (pin === '0000') {
+        alert('❌ รหัส PIN 0000 ถูกสงวนไว้สำหรับ Admin กรุณากำหนดรหัส PIN อื่น เช่น 1234 หรือ 8888');
+        return;
+      }
+
+      const teachers = JSON.parse(localStorage.getItem('quizlive_registered_teachers') || '[]');
+      const existingPinTeacher = teachers.find(t => t.pin === pin);
+      if (existingPinTeacher) {
+        alert(`❌ รหัส PIN ${pin} มีผู้ใช้งานแล้ว (${existingPinTeacher.name})\nกรุณากำหนดรหัส PIN อื่น เช่น 1234, 5678, 8888`);
+        return;
+      }
+
+      const teacherId = 'teacher_' + Date.now();
+      const newTeacher = { id: teacherId, name: name, pin: pin };
+      teachers.push(newTeacher);
+
+      localStorage.setItem('quizlive_registered_teachers', JSON.stringify(teachers));
+      currentTeacher = newTeacher;
+      localStorage.setItem('quizlive_current_teacher', JSON.stringify(currentTeacher));
+      loadLocalData();
+      closeTeacherRegisterModal();
+      alert(`🎉 ลงทะเบียนคุณครู "${name}" สำเร็จ!\n(ครั้งต่อไปสามารถกดรหัส PIN: ${pin} เพื่อเข้าสู่ระบบได้ทันที)`);
+      showTeacherDashboard();
+      await syncQuestionsFromCloud();
+    }
+
+    function logoutTeacher() {
+      currentTeacher = null;
+      questions = [];
+      localStorage.removeItem('quizlive_current_teacher');
+      showTeacherAuthView();
+    }
+
+    // ==========================================
+    // TEACHER EXAM MANAGEMENT & GRADE POPULATING
+    // ==========================================
+    function getUniqueGrades() {
+      const allQ = (currentTeacher && currentTeacher.id === 'admin') ? getAllSystemQuestions() : questions;
+      const set = new Set();
+      allQ.forEach(q => { if (q && q.grade && q.grade.trim()) set.add(q.grade.trim()); });
+      return Array.from(set).sort();
+    }
+
+    function populateTeacherGradeSelects() {
+      const grades = getUniqueGrades();
+      const filterSelect = document.getElementById('teacherGradeFilter');
+      const sessionSelect = document.getElementById('sessionGradeSelect');
+      const allQ = (currentTeacher && currentTeacher.id === 'admin') ? getAllSystemQuestions() : questions;
+
+      if (filterSelect) {
+        const currentFilter = filterSelect.value || 'ALL';
+        filterSelect.innerHTML = '<option value="ALL">🌟 ทั้งหมดทุกชุดข้อสอบ</option>';
+        grades.forEach(g => {
+          filterSelect.innerHTML += `<option value="${g}">${g}</option>`;
+        });
+        filterSelect.value = grades.includes(currentFilter) || currentFilter === 'ALL' ? currentFilter : 'ALL';
+      }
+
+      if (sessionSelect) {
+        const currentSession = sessionSelect.value;
+        sessionSelect.innerHTML = '';
+        grades.forEach(g => {
+          const count = allQ.filter(q => q.grade === g).length;
+          sessionSelect.innerHTML += `<option value="${g}">ชุด ${g} (${count} ข้อ)</option>`;
+        });
+        sessionSelect.innerHTML += `<option value="ALL">รวมทุกชุดข้อสอบ (${allQ.length} ข้อ)</option>`;
+        if (currentSession && (grades.includes(currentSession) || currentSession === 'ALL')) {
+          sessionSelect.value = currentSession;
+        }
+      }
+    }
+
+    function renderTeacherQuestionList() {
+      const filter = document.getElementById('teacherGradeFilter') ? document.getElementById('teacherGradeFilter').value : 'ALL';
+      const list = document.getElementById('teacherQuestionsList');
+      if (!list) return;
+      list.innerHTML = '';
+
+      const baseQuestions = (currentTeacher && currentTeacher.id === 'admin') ? getAllSystemQuestions() : questions;
+      let displayQuestions = baseQuestions;
+      if (filter && filter !== 'ALL') {
+        displayQuestions = baseQuestions.filter(q => q.grade === filter);
+      }
+
+      const badge = document.getElementById('teacherQuestionCountBadge');
+      if (badge) badge.innerText = `${displayQuestions.length} ข้อ`;
+
+      if (displayQuestions.length === 0) {
+        const teacherName = currentTeacher ? currentTeacher.name : 'คุณครู';
+        list.innerHTML = `
+          <div class="text-center py-12 px-4 rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 space-y-4">
+            <div class="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 text-3xl flex items-center justify-center mx-auto shadow-sm">
+              📝
+            </div>
+            <div class="space-y-1">
+              <h4 class="font-heading font-black text-base text-slate-800">ยังไม่มีข้อสอบในระบบ</h4>
+              <p class="text-xs text-slate-500 max-w-sm mx-auto font-medium">
+                เริ่มต้นง่ายๆ โดยการกดปุ่มด้านล่างเพื่อเพิ่มข้อสอบ หรือนำเข้าไฟล์ PDF ด้วย AI
+              </p>
+            </div>
+            <div class="flex items-center justify-center gap-3 pt-2 flex-wrap">
+              <button onclick="openAddQuestionChoiceModal()" class="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 font-heading font-bold text-xs text-white shadow-md shadow-blue-200 transition">
+                ➕ เพิ่มข้อสอบข้อแรก
+              </button>
+              <button onclick="openAiUploadModal()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200 text-blue-800 font-heading font-bold text-xs transition">
+                ⚡ นำเข้าไฟล์ด้วย AI (PDF / รูปภาพ / Excel)
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      const choiceLabels = ['ก', 'ข', 'ค', 'ง'];
+
+      displayQuestions.forEach((q, index) => {
+        const card = document.createElement('div');
+        card.className = 'p-5 rounded-2xl bg-slate-50/70 hover:bg-white border border-slate-200 hover:border-blue-300 hover:shadow-md transition space-y-3';
+        
+        const subjInfo = getSubjectInfo(q.grade);
+
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="w-6 h-6 rounded-lg bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center">${index + 1}</span>
+              <span class="px-2.5 py-0.5 rounded-md font-bold text-[11px] border ${subjInfo.badgeClass}">${q.grade || 'ทั่วไป'}</span>
+              ${q.timeLimit && q.timeLimit > 0 ? `<span class="px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 font-bold text-[10px] border border-amber-200 flex items-center gap-1">⏱️ ${q.timeLimit}s</span>` : '<span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-medium text-[10px] border border-slate-200">♾️ ไม่จับเวลา</span>'}
+              ${q.image ? '<span class="px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 font-bold text-[10px] border border-rose-200 flex items-center gap-1">🖼️ มีรูป</span>' : ''}
+              ${q.teacherId ? `<span class="text-[10px] text-slate-400 font-mono">(@${q.teacherId})</span>` : ''}
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="editQuestion('${q.id}')" class="text-xs text-amber-700 hover:text-amber-800 font-bold px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 transition">✏️ แก้ไข</button>
+              <button onclick="deleteQuestion('${q.id}')" class="text-xs text-rose-700 hover:text-rose-800 font-bold px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 border border-rose-200 transition">🗑️ ลบ</button>
+            </div>
+          </div>
+          
+          <div class="text-sm sm:text-base font-semibold text-slate-900 py-1">${q.question}</div>
+
+          ${q.image ? `<div class="py-1 text-center"><img src="${q.image}" class="max-h-40 max-w-full mx-auto rounded-xl border border-slate-200 object-contain shadow-sm bg-white p-1"></div>` : ''}
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            ${q.choices.map((c, i) => `
+              <div class="p-2.5 rounded-xl border ${i === q.correctIndex ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold' : 'bg-white border-slate-200 text-slate-700 font-medium'}">
+                <span class="mr-1 font-bold ${i === q.correctIndex ? 'text-emerald-700' : 'text-slate-400'}">(${choiceLabels[i]})</span> ${c} ${i === q.correctIndex ? '✓' : ''}
+              </div>
+            `).join('')}
+          </div>
+
+          ${q.explanation ? `<div class="text-xs text-amber-900 bg-amber-50/80 p-2.5 rounded-xl border border-amber-200/80">💡 <b>คำอธิบายเฉลย:</b> ${q.explanation}</div>` : ''}
+        `;
+        list.appendChild(card);
+      });
+
+      renderMath(list);
+    }
+
+    // ==========================================
+    // IMAGE HANDLING IN QUESTION FORM
+    // ==========================================
+    function handleQuestionImageSelected(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const maxDim = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          document.getElementById('qImageData').value = dataUrl;
+          
+          const previewImg = document.getElementById('modalImagePreview');
+          previewImg.src = dataUrl;
+          document.getElementById('modalImagePreviewBox').classList.remove('hidden');
+          document.getElementById('removeImageBtn').classList.remove('hidden');
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeQuestionImage() {
+      document.getElementById('qImageData').value = '';
+      document.getElementById('qImageFileInput').value = '';
+      document.getElementById('modalImagePreview').src = '';
+      document.getElementById('modalImagePreviewBox').classList.add('hidden');
+      document.getElementById('removeImageBtn').classList.add('hidden');
+    }
+
+    // ==========================================
+    // LIVE EXAM SESSION & PRESENTATION QR CODE
+    // ==========================================
+    function openLiveSessionModal() {
+      populateTeacherGradeSelects();
+      generateLiveSessionQR();
+      document.getElementById('liveSessionModal').classList.remove('hidden');
+      document.getElementById('liveSessionModal').classList.add('flex');
+    }
+
+    function closeLiveSessionModal() {
+      document.getElementById('liveSessionModal').classList.add('hidden');
+      document.getElementById('liveSessionModal').classList.remove('flex');
+    }
+
+    async function generateLiveSessionQR() {
+      const selectedGrade = document.getElementById('sessionGradeSelect').value;
+      const pin = Math.floor(100000 + Math.random() * 900000).toString();
+      document.getElementById('sessionPinCode').innerText = pin;
+
+      const examQuestions = (selectedGrade === 'ALL')
+        ? questions
+        : questions.filter(q => q.grade === selectedGrade);
+
+      activeExamSession = {
+        pin: pin,
+        teacherId: currentTeacher ? currentTeacher.id : 'default',
+        teacherName: currentTeacher ? currentTeacher.name : 'คุณครู',
+        grade: selectedGrade,
+        questions: examQuestions,
+        createdAt: new Date().toISOString()
+      };
+      localStorage.setItem('quizlive_active_session', JSON.stringify(activeExamSession));
+
+      // Sync Session to Cloudflare Worker
+      if (cloudBackendUrl) {
+        try {
+          const cleanUrl = cloudBackendUrl.replace(/\/$/, '');
+          fetch(`${cleanUrl}/api/session`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ session: activeExamSession })
+          });
+        } catch(e){}
+      }
+
+      const baseUrl = window.location.origin + window.location.pathname;
+      const sessionUrl = `${baseUrl}?room=${pin}&grade=${encodeURIComponent(selectedGrade)}`;
+      document.getElementById('sessionDirectUrlInput').value = sessionUrl;
+
+      const qrContainer = document.getElementById('sessionQRCodeBox');
+      qrContainer.innerHTML = '';
+
+      if (typeof QRCode !== 'undefined') {
+        new QRCode(qrContainer, {
+          text: sessionUrl,
+          width: 220,
+          height: 220,
+          colorDark: '#0f172a',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.H
+        });
+      }
+    }
+
+    function copySessionLink() {
+      const input = document.getElementById('sessionDirectUrlInput');
+      input.select();
+      document.execCommand('copy');
+      const btn = document.getElementById('copyLinkBtn');
+      btn.innerText = '✅ คัดลอกแล้ว!';
+      setTimeout(() => { btn.innerText = '📋 คัดลอกลิงก์'; }, 2000);
+    }
+
+    // ==========================================
+    // CLOUD SETTINGS MODAL & TEST
+    // ==========================================
+    function openCloudSettingsModal() {
+      document.getElementById('cloudBackendUrlInput').value = cloudBackendUrl;
+      document.getElementById('cloudSettingsModal').classList.remove('hidden');
+      document.getElementById('cloudSettingsModal').classList.add('flex');
+    }
+
+    function closeCloudSettingsModal() {
+      document.getElementById('cloudSettingsModal').classList.add('hidden');
+      document.getElementById('cloudSettingsModal').classList.remove('flex');
+    }
+
+    async function testCloudConnection() {
+      const url = document.getElementById('cloudBackendUrlInput').value.trim();
+      if (!url) {
+        alert('กรุณากรอก Cloudflare Worker URL');
+        return;
+      }
+
+      try {
+        const cleanUrl = url.replace(/\/$/, '');
+        const res = await fetch(`${cleanUrl}/api/questions?grade=ALL`);
+        const data = await res.json();
+        if (data.status === 'online' || data.success) {
+          alert('✅ เชื่อมต่อกับ Cloudflare Worker API สำเร็จแล้ว!');
+        } else {
+          alert('✅ เชื่อมต่อได้ ส่งกลับข้อมูล: ' + JSON.stringify(data));
+        }
+      } catch (err) {
+        alert('❌ ไม่สามารถเชื่อมต่อได้: ' + err.message);
+      }
+    }
+
+    async function saveCloudSettings() {
+      cloudBackendUrl = document.getElementById('cloudBackendUrlInput').value.trim();
+      localStorage.setItem('quizlive_cloud_backend', cloudBackendUrl);
+      updateBackendStatusBadge();
+
+      if (cloudBackendUrl) {
+        await syncQuestionsToCloud();
+      }
+
+      closeCloudSettingsModal();
+      alert('🎉 บันทึกการเชื่อมต่อหลังบ้านเรียบร้อยแล้ว!');
+    }
+
+    // ==========================================
+    // STUDENT DIRECT ROOM ENTRY (SCAN QR / OPEN LINK)
+    // ==========================================
+    async function handleStudentDirectRoomEntry(roomPin, gradeParam) {
+      let targetGrade = gradeParam ? decodeURIComponent(gradeParam) : 'ม.1';
+      let sessionData = null;
+
+      if (cloudBackendUrl) {
+        try {
+          const cleanUrl = cloudBackendUrl.replace(/\/$/, '');
+          const res = await fetch(`${cleanUrl}/api/session?pin=${roomPin}`);
+          const data = await res.json();
+          if (data.success && data.session) {
+            sessionData = data.session;
+            targetGrade = data.session.grade || targetGrade;
+          }
+        } catch(e){}
+      }
+      
+      if (!sessionData && activeExamSession && activeExamSession.pin === roomPin) {
+        sessionData = activeExamSession;
+        targetGrade = activeExamSession.grade || targetGrade;
+      }
+
+      if (sessionData && sessionData.questions && sessionData.questions.length > 0) {
+        activeQuizQuestions = sessionData.questions;
+      } else {
+        if (targetGrade === 'ALL') {
+          activeQuizQuestions = [...questions];
+        } else {
+          activeQuizQuestions = questions.filter(q => q.grade === targetGrade);
+        }
+      }
+
+      if (activeQuizQuestions.length === 0) {
+        activeQuizQuestions = [...questions];
+      }
+
+      currentStudent.pin = roomPin;
+      currentStudent.teacherId = sessionData ? sessionData.teacherId : '';
+
+      hideAllViews();
+      document.getElementById('studentRoomEntryView').classList.remove('hidden');
+      const heroWelcome = document.getElementById('heroWelcomeBox');
+      if (heroWelcome) heroWelcome.classList.add('hidden');
+
+      const teacherInfo = sessionData && sessionData.teacherName ? ` (ครู${sessionData.teacherName})` : '';
+      document.getElementById('studentAssignedExamTitle').innerText = `ห้องสอบรหัส: ${roomPin}${teacherInfo}`;
+      document.getElementById('studentLockedGradeText').innerText = `ชุดข้อสอบ: ${targetGrade}`;
+      document.getElementById('studentLockedQuestionCount').innerText = `${activeQuizQuestions.length} ข้อ`;
+
+      document.getElementById('headerActions').innerHTML = `
+        <span class="text-xs font-bold text-white bg-white/20 px-3.5 py-1.5 rounded-xl border border-white/30 backdrop-blur-md">🟢 ห้องสอบ: ${roomPin}</span>
+      `;
+    }
+
+    function showManualStudentPinModal() {
+      document.getElementById('manualStudentPinModal').classList.remove('hidden');
+      document.getElementById('manualStudentPinModal').classList.add('flex');
+    }
+
+    function closeManualStudentPinModal() {
+      document.getElementById('manualStudentPinModal').classList.add('hidden');
+      document.getElementById('manualStudentPinModal').classList.remove('flex');
+    }
+
+    async function handleManualPinSubmit(e) {
+      e.preventDefault();
+      const pin = document.getElementById('manualPinInput').value.trim();
+      closeManualStudentPinModal();
+
+      await handleStudentDirectRoomEntry(pin, 'ALL');
+    }
+
+    function handleStudentStartExam(e) {
+      e.preventDefault();
+      const no = document.getElementById('activeStudentNoInput').value.trim();
+      const name = document.getElementById('activeStudentNameInput').value.trim();
+      const room = document.getElementById('activeStudentRoomInput').value.trim();
+
+      if (!name || !no) {
+        alert('กรุณากรอกเลขที่และชื่อให้ครบถ้วน');
+        return;
+      }
+
+      currentStudent = {
+        name,
+        no,
+        room,
+        grade: activeExamSession ? activeExamSession.grade : 'ม.1',
+        pin: currentStudent.pin || '-',
+        teacherId: currentStudent.teacherId || ''
+      };
+
+      activeQuizQuestions = activeQuizQuestions.sort(() => Math.random() - 0.5);
+
+      currentQuizIndex = 0;
+      studentAnswers = [];
+
+      hideAllViews();
+      document.getElementById('studentQuizView').classList.remove('hidden');
+      document.getElementById('quizGradeBadge').innerText = currentStudent.grade;
+      document.getElementById('quizStudentName').innerText = `เลขที่ ${no} - ${name} ${room ? `(${room})` : ''}`;
+      document.getElementById('totalQuestionsNum').innerText = `/ ${activeQuizQuestions.length}`;
+
+      renderCurrentQuestion();
+    }
+
+    function renderCurrentQuestion() {
+      if (questionTimerInterval) {
+        clearInterval(questionTimerInterval);
+        questionTimerInterval = null;
+      }
+
+      const q = activeQuizQuestions[currentQuizIndex];
+      document.getElementById('currentQuestionNum').innerText = currentQuizIndex + 1;
+      
+      const percent = Math.round(((currentQuizIndex) / activeQuizQuestions.length) * 100);
+      document.getElementById('quizProgressBar').style.width = percent + '%';
+
+      // Timer Handling
+      const timerBadge = document.getElementById('quizTimerBadge');
+      const noTimerBadge = document.getElementById('quizNoTimerBadge');
+      const timerSecEl = document.getElementById('quizTimerSeconds');
+      const timeLimit = parseInt(q.timeLimit) || 0;
+
+      if (timeLimit > 0) {
+        if (noTimerBadge) noTimerBadge.classList.add('hidden');
+        if (timerBadge) {
+          timerBadge.classList.remove('hidden');
+          timerBadge.className = 'flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold transition-all';
+        }
+        let remaining = timeLimit;
+        if (timerSecEl) timerSecEl.innerText = remaining;
+
+        questionTimerInterval = setInterval(() => {
+          remaining--;
+          if (timerSecEl) timerSecEl.innerText = remaining;
+
+          if (remaining <= 5 && remaining > 0) {
+            if (timerBadge) {
+              timerBadge.className = 'flex items-center gap-1.5 px-3 py-1 rounded-xl bg-rose-500 border border-rose-600 text-white text-xs font-bold animate-bounce transition-all shadow-md';
+            }
+          }
+
+          if (remaining <= 0) {
+            clearInterval(questionTimerInterval);
+            questionTimerInterval = null;
+            handleQuestionTimeout();
+          }
+        }, 1000);
+      } else {
+        if (timerBadge) timerBadge.classList.add('hidden');
+        if (noTimerBadge) noTimerBadge.classList.remove('hidden');
+      }
+
+      const qBox = document.getElementById('questionTextDisplay');
+      qBox.innerHTML = q.question;
+
+      const imgContainer = document.getElementById('questionImageContainer');
+      const imgDisplay = document.getElementById('questionImageDisplay');
+      if (q.image) {
+        imgDisplay.src = q.image;
+        imgContainer.classList.remove('hidden');
+      } else {
+        imgDisplay.src = '';
+        imgContainer.classList.add('hidden');
+      }
+
+      for (let i = 0; i < 4; i++) {
+        const choiceTextDiv = document.getElementById(`choiceText${i}`);
+        choiceTextDiv.innerHTML = q.choices[i] || '-';
+      }
+
+      renderMath(document.getElementById('studentQuizView'));
+    }
+
+    function handleQuestionTimeout() {
+      const q = activeQuizQuestions[currentQuizIndex];
+      studentAnswers.push({
+        questionId: q.id,
+        question: q.question,
+        image: q.image,
+        choices: q.choices,
+        selectedIndex: -1,
+        correctIndex: q.correctIndex,
+        explanation: q.explanation || 'หมดเวลาทำข้อนี้',
+        isCorrect: false,
+        isTimeout: true
+      });
+
+      currentQuizIndex++;
+      if (currentQuizIndex < activeQuizQuestions.length) {
+        renderCurrentQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function handleSelectChoice(choiceIndex) {
+      if (questionTimerInterval) {
+        clearInterval(questionTimerInterval);
+        questionTimerInterval = null;
+      }
+
+      const q = activeQuizQuestions[currentQuizIndex];
+      const isCorrect = (choiceIndex === q.correctIndex);
+
+      studentAnswers.push({
+        questionId: q.id,
+        question: q.question,
+        image: q.image,
+        choices: q.choices,
+        selectedIndex: choiceIndex,
+        correctIndex: q.correctIndex,
+        explanation: q.explanation,
+        isCorrect: isCorrect
+      });
+
+      currentQuizIndex++;
+      if (currentQuizIndex < activeQuizQuestions.length) {
+        renderCurrentQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    async function showResults() {
+      if (questionTimerInterval) {
+        clearInterval(questionTimerInterval);
+        questionTimerInterval = null;
+      }
+
+      hideAllViews();
+      document.getElementById('studentResultView').classList.remove('hidden');
+
+      const correctCount = studentAnswers.filter(a => a.isCorrect).length;
+      const total = studentAnswers.length;
+      const percent = total > 0 ? Math.round((correctCount / total) * 100) : 0;
+
+      document.getElementById('resultStudentName').innerText = `${currentStudent.name} (เลขที่ ${currentStudent.no})`;
+      document.getElementById('resultGradeName').innerText = `ระดับชั้น: ${currentStudent.grade}`;
+      document.getElementById('resultScoreText').innerText = `${correctCount} / ${total}`;
+      document.getElementById('resultPercentageText').innerText = `ความแม่นยำ ${percent}%`;
+
+      // Submit Score to Cloudflare Worker Backend
+      if (cloudBackendUrl) {
+        try {
+          const cleanUrl = cloudBackendUrl.replace(/\/$/, '');
+          fetch(`${cleanUrl}/api/submit`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              result: {
+                pin: currentStudent.pin || '-',
+                teacherId: currentStudent.teacherId || '',
+                grade: currentStudent.grade || '-',
+                room: currentStudent.room || '-',
+                no: currentStudent.no || '-',
+                name: currentStudent.name || 'นักเรียน',
+                score: correctCount,
+                total: total
+              }
+            })
+          });
+        } catch(e){}
+      }
+
+      if (percent >= 50 && typeof confetti !== 'undefined') {
+        confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+      }
+
+      renderDetailedReview();
+    }
+
+    function toggleReviewAnswers() {
+      document.getElementById('detailedReviewContainer').classList.toggle('hidden');
+    }
+
+    function renderDetailedReview() {
+      const list = document.getElementById('detailedReviewList');
+      list.innerHTML = '';
+
+      const choiceLabels = ['ก', 'ข', 'ค', 'ง'];
+
+      studentAnswers.forEach((ans, idx) => {
+        const card = document.createElement('div');
+        card.className = `p-5 rounded-2xl border ${ans.isCorrect ? 'bg-emerald-50/70 border-emerald-200' : 'bg-rose-50/70 border-rose-200'} space-y-2.5`;
+        
+        let badge = '';
+        if (ans.isCorrect) {
+          badge = '<span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs border border-emerald-200">✓ ตอบถูก</span>';
+        } else if (ans.isTimeout || ans.selectedIndex === -1) {
+          badge = '<span class="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold text-xs border border-amber-200">⏱️ หมดเวลา (ไม่ได้ตอบ)</span>';
+        } else {
+          badge = '<span class="px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold text-xs border border-rose-200">✗ ตอบผิด</span>';
+        }
+
+        const studentAnswerText = ans.selectedIndex >= 0
+          ? `(${choiceLabels[ans.selectedIndex]}) ${ans.choices[ans.selectedIndex]}`
+          : '<span class="text-rose-600 font-bold">ไม่ได้เลือกคำตอบ (หมดเวลา)</span>';
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-600">ข้อที่ ${idx + 1}</span>
+            ${badge}
+          </div>
+          <div class="text-base font-bold text-slate-900 py-1">${ans.question}</div>
+          ${ans.image ? `<div class="py-1 text-center"><img src="${ans.image}" class="max-h-40 max-w-full mx-auto rounded-xl border border-slate-200 object-contain shadow-sm bg-white p-1"></div>` : ''}
+          <div class="text-xs space-y-1.5 pt-1">
+            <div class="text-slate-700">คำตอบของคุณ: <span class="${ans.isCorrect ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'}">${studentAnswerText}</span></div>
+            ${!ans.isCorrect ? `<div class="text-emerald-800 font-bold">เฉลยที่ถูกต้อง: (${choiceLabels[ans.correctIndex]}) ${ans.choices[ans.correctIndex]}</div>` : ''}
+            ${ans.explanation ? `<div class="text-amber-900 text-xs p-2.5 rounded-xl bg-amber-50 border border-amber-200 mt-2">💡 <b>วิธีคิด:</b> ${ans.explanation}</div>` : ''}
+          </div>
+        `;
+        list.appendChild(card);
+      });
+
+      renderMath(list);
+    }
+
+    // ==========================================
+    // QUESTION ADD / EDIT MODAL & FORM
+    // ==========================================
+    function openAddQuestionModal() {
+      document.getElementById('editQuestionId').value = '';
+      document.getElementById('modalTitle').innerText = 'เพิ่มข้อสอบในระบบ';
+      document.getElementById('questionForm').reset();
+
+      populateDatalistSets();
+
+      const currentFilter = document.getElementById('teacherGradeFilter') ? document.getElementById('teacherGradeFilter').value : 'ALL';
+      const defaultGrade = (currentFilter && currentFilter !== 'ALL') ? currentFilter : '';
+      document.getElementById('qGradeInput').value = defaultGrade;
+
+      // Default Timer Option: ไม่จับเวลา (ไม่จำกัดเวลา)
+      const timerNoRadio = document.getElementById('timerOptNo');
+      if (timerNoRadio) timerNoRadio.checked = true;
+      const timeLimitInput = document.getElementById('qTimeLimitInput');
+      if (timeLimitInput) timeLimitInput.value = '30';
+      handleTimerOptionChange();
+
+      removeQuestionImage();
+      updateLivePreview();
+      document.getElementById('addQuestionModal').classList.remove('hidden');
+      document.getElementById('addQuestionModal').classList.add('flex');
+    }
+
+    function closeAddQuestionModal() {
+      document.getElementById('addQuestionModal').classList.add('hidden');
+      document.getElementById('addQuestionModal').classList.remove('flex');
+    }
+
+    function insertMathFormula(formula, targetInputId) {
+      const input = document.getElementById(targetInputId);
+      const startPos = input.selectionStart || 0;
+      const endPos = input.selectionEnd || 0;
+      const text = input.value;
+      
+      const insertText = `$${formula}$`;
+      input.value = text.substring(0, startPos) + insertText + text.substring(endPos);
+      input.focus();
+      input.selectionStart = startPos + insertText.length;
+      input.selectionEnd = startPos + insertText.length;
+      updateLivePreview();
+    }
+
+    function updateLivePreview() {
+      const text = document.getElementById('qTextInput').value;
+      const preview = document.getElementById('liveMathPreview');
+      preview.innerHTML = text || '<span class="text-slate-400 text-xs font-normal">(เริ่มพิมพ์โจทย์เพื่อดูตัวอย่าง...)</span>';
+      renderMath(preview);
+    }
+
+    async function handleSaveQuestion(e) {
+      e.preventDefault();
+      const editId = document.getElementById('editQuestionId').value;
+      const grade = document.getElementById('qGradeInput').value.trim();
+      
+      if (!grade) {
+        alert('กรุณาระบุหรือเลือกชื่อชุดข้อสอบ เช่น คณิต ม.1');
+        return;
+      }
+      
+      const isTimed = document.getElementById('timerOptYes').checked;
+      const timeLimit = isTimed ? (parseInt(document.getElementById('qTimeLimitInput').value) || 30) : 0;
+
+      const questionText = document.getElementById('qTextInput').value.trim();
+      const imageData = document.getElementById('qImageData').value.trim();
+      const choice0 = document.getElementById('qChoice0').value.trim();
+      const choice1 = document.getElementById('qChoice1').value.trim();
+      const choice2 = document.getElementById('qChoice2').value.trim();
+      const choice3 = document.getElementById('qChoice3').value.trim();
+      const correctIndex = parseInt(document.querySelector('input[name="correctChoiceRadio"]:checked').value);
+      const explanation = document.getElementById('qExplanationInput').value.trim();
+
+      if (!questionText || !choice0 || !choice1 || !choice2 || !choice3) {
+        alert('กรุณากรอกโจทย์และตัวเลือกทั้ง 4 ข้อให้ครบถ้วน');
+        return;
+      }
+
+      if (editId) {
+        const idx = questions.findIndex(q => q.id === editId);
+        if (idx !== -1) {
+          questions[idx] = {
+            id: editId,
+            teacherId: currentTeacher ? currentTeacher.id : 'default',
+            grade,
+            question: questionText,
+            image: imageData,
+            choices: [choice0, choice1, choice2, choice3],
+            correctIndex,
+            explanation,
+            timeLimit
+          };
+        }
+      } else {
+        questions.push({
+          id: 'q_' + Date.now(),
+          teacherId: currentTeacher ? currentTeacher.id : 'default',
+          grade,
+          question: questionText,
+          image: imageData,
+          choices: [choice0, choice1, choice2, choice3],
+          correctIndex,
+          explanation,
+          timeLimit
+        });
+      }
+
+      saveLocalData();
+      await syncQuestionsToCloud();
+      populateTeacherGradeSelects();
+      renderTeacherQuestionList();
+      renderKPIStats();
+      renderExamSetsGrid();
+      renderTeachersManagementList();
+      closeAddQuestionModal();
+    }
+
+    function editQuestion(id) {
+      const q = questions.find(item => item.id === id);
+      if (!q) return;
+
+      populateDatalistSets();
+
+      document.getElementById('editQuestionId').value = q.id;
+      document.getElementById('modalTitle').innerText = 'แก้ไขข้อสอบ';
+      document.getElementById('qGradeInput').value = q.grade || '';
+
+      const timeLimit = parseInt(q.timeLimit) || 0;
+      if (timeLimit > 0) {
+        document.getElementById('timerOptYes').checked = true;
+        document.getElementById('qTimeLimitInput').value = timeLimit;
+      } else {
+        document.getElementById('timerOptNo').checked = true;
+        document.getElementById('qTimeLimitInput').value = '30';
+      }
+      handleTimerOptionChange();
+
+      document.getElementById('qTextInput').value = q.question;
+      document.getElementById('qChoice0').value = q.choices[0] || '';
+      document.getElementById('qChoice1').value = q.choices[1] || '';
+      document.getElementById('qChoice2').value = q.choices[2] || '';
+      document.getElementById('qChoice3').value = q.choices[3] || '';
+      document.getElementById('qExplanationInput').value = q.explanation || '';
+
+      if (q.image) {
+        document.getElementById('qImageData').value = q.image;
+        document.getElementById('modalImagePreview').src = q.image;
+        document.getElementById('modalImagePreviewBox').classList.remove('hidden');
+        document.getElementById('removeImageBtn').classList.remove('hidden');
+      } else {
+        removeQuestionImage();
+      }
+
+      const radios = document.querySelectorAll('input[name="correctChoiceRadio"]');
+      radios.forEach(r => {
+        r.checked = (parseInt(r.value) === q.correctIndex);
+      });
+
+      updateLivePreview();
+      document.getElementById('addQuestionModal').classList.remove('hidden');
+      document.getElementById('addQuestionModal').classList.add('flex');
+    }
+
+    async function deleteQuestion(id) {
+      if (confirm('ต้องการลบข้อสอบข้อนี้ใช่หรือไม่?')) {
+        questions = questions.filter(q => q.id !== id);
+        saveLocalData();
+        await syncQuestionsToCloud();
+        populateTeacherGradeSelects();
+        renderTeacherQuestionList();
+        renderKPIStats();
+        renderExamSetsGrid();
+        renderTeachersManagementList();
+      }
+    }
+
+    async function handleClearAllQuestions() {
+      const filter = document.getElementById('teacherGradeFilter').value;
+      const targetName = filter === 'ALL' ? 'ทั้งหมด' : `ชุด ${filter}`;
+      if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบข้อสอบ ${targetName}?`)) {
+        if (filter === 'ALL') {
+          questions = [];
+        } else {
+          questions = questions.filter(q => q.grade !== filter);
+        }
+        saveLocalData();
+        await syncQuestionsToCloud();
+        populateTeacherGradeSelects();
+        renderTeacherQuestionList();
+        renderKPIStats();
+        renderExamSetsGrid();
+        renderTeachersManagementList();
+      }
+    }
+    // ==========================================
+    // AI SMART IMPORT HUB & API KEY CONFIGURATION
+    // ==========================================
+    let currentAiUploadTab = 'pdf';
+    let selectedAiPdfFile = null;
+    let selectedAiImageFile = null;
+    let selectedAiExcelFile = null;
+    let currentAiImageBase64 = null;
+    let currentAiImageMime = 'image/jpeg';
+
+    // Gemini API Key Management
+    function getGeminiApiKey() {
+      return EMBEDDED_GEMINI_API_KEY;
+    }
+
+
+    // Modal Navigation & Reset
+    function openAddQuestionChoiceModal() {
+      document.getElementById('addMethodSelectModal').classList.remove('hidden');
+      document.getElementById('addMethodSelectModal').classList.add('flex');
+    }
+
+    function closeAddMethodSelectModal() {
+      document.getElementById('addMethodSelectModal').classList.add('hidden');
+      document.getElementById('addMethodSelectModal').classList.remove('flex');
+    }
+
+    function selectAddMethod(method) {
+      closeAddMethodSelectModal();
+      if (method === 'manual') {
+        openAddQuestionModal();
+      } else if (method === 'upload') {
+        openAiUploadModal('pdf');
+      }
+    }
+
+    function openAiUploadModal(initialTab = 'pdf') {
+      populateDatalistSets();
+
+      const currentFilter = document.getElementById('teacherGradeFilter') ? document.getElementById('teacherGradeFilter').value : 'ALL';
+      const defaultGrade = (currentFilter && currentFilter !== 'ALL') ? currentFilter : '';
+      document.getElementById('aiUploadGradeInput').value = defaultGrade;
+
+      // Reset file selections
+      selectedAiPdfFile = null;
+      selectedAiImageFile = null;
+      selectedAiExcelFile = null;
+      currentAiImageBase64 = null;
+
+      // Reset PDF Tab state
+      document.getElementById('aiPdfFileInput').value = '';
+      document.getElementById('aiPdfSelectedName').innerText = '';
+      document.getElementById('aiPdfSelectedName').classList.add('hidden');
+      const pdfActionBox = document.getElementById('aiPdfActionBox');
+      if (pdfActionBox) pdfActionBox.classList.add('hidden');
+
+      // Reset Image Tab state
+      document.getElementById('aiImageFileInput').value = '';
+      document.getElementById('aiImageSelectedName').innerText = '';
+      document.getElementById('aiImageSelectedName').classList.add('hidden');
+      document.getElementById('aiImagePreviewThumbnailBox').classList.add('hidden');
+      document.getElementById('aiImagePreviewThumbnail').src = '';
+      const imgActionBox = document.getElementById('aiImageActionBox');
+      if (imgActionBox) imgActionBox.classList.add('hidden');
+
+      // Reset Excel/Text Tab state
+      document.getElementById('aiExcelFileInput').value = '';
+      document.getElementById('aiExcelSelectedName').innerText = '';
+      document.getElementById('aiExcelSelectedName').classList.add('hidden');
+      const excelActionBox = document.getElementById('aiExcelActionBox');
+      if (excelActionBox) excelActionBox.classList.add('hidden');
+      document.getElementById('aiBulkTextInput').value = '';
+
+      // Reset Status & Preview
+      document.getElementById('aiProcessingStatus').classList.add('hidden');
+      document.getElementById('aiExtractedPreview').classList.add('hidden');
+      const saveBtn = document.getElementById('saveAiExtractedBtn');
+      saveBtn.disabled = true;
+      saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      extractedQuestionsBuffer = [];
+
+      switchAiUploadTab(initialTab);
+
+      document.getElementById('aiUploadModal').classList.remove('hidden');
+      document.getElementById('aiUploadModal').classList.add('flex');
+    }
+
+    function closeAiUploadModal() {
+      document.getElementById('aiUploadModal').classList.add('hidden');
+      document.getElementById('aiUploadModal').classList.remove('flex');
+    }
+
+    function switchAiUploadTab(tabName) {
+      currentAiUploadTab = tabName;
+      const btnPdf = document.getElementById('aiTabBtnPdf');
+      const btnImage = document.getElementById('aiTabBtnImage');
+      const btnExcel = document.getElementById('aiTabBtnExcel');
+
+      const contentPdf = document.getElementById('aiTabContentPdf');
+      const contentImage = document.getElementById('aiTabContentImage');
+      const contentExcel = document.getElementById('aiTabContentExcel');
+
+      const activeClass = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 bg-white text-blue-700 shadow-sm';
+      const inactiveClass = 'flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-600 hover:text-slate-900';
+
+      btnPdf.className = inactiveClass;
+      btnImage.className = inactiveClass;
+      btnExcel.className = inactiveClass;
+
+      contentPdf.classList.add('hidden');
+      contentImage.classList.add('hidden');
+      contentExcel.classList.add('hidden');
+
+      if (tabName === 'pdf') {
+        btnPdf.className = activeClass;
+        contentPdf.classList.remove('hidden');
+      } else if (tabName === 'image') {
+        btnImage.className = activeClass;
+        contentImage.classList.remove('hidden');
+      } else if (tabName === 'excel') {
+        btnExcel.className = activeClass;
+        contentExcel.classList.remove('hidden');
+      }
+    }
+
+    // ==========================================
+    // STEP 1: FILE SELECTION HANDLERS
+    // ==========================================
+    function handleAiPdfFileChosen(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      selectedAiPdfFile = file;
+
+      const nameEl = document.getElementById('aiPdfSelectedName');
+      nameEl.innerText = `📄 เลือกไฟล์แล้ว: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+      nameEl.classList.remove('hidden');
+
+      const actionBox = document.getElementById('aiPdfActionBox');
+      if (actionBox) actionBox.classList.remove('hidden');
+
+      // Hide previous extraction if any
+      document.getElementById('aiExtractedPreview').classList.add('hidden');
+      const saveBtn = document.getElementById('saveAiExtractedBtn');
+      saveBtn.disabled = true;
+      saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+
+    function handleAiImageFileChosen(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      selectedAiImageFile = file;
+
+      const nameEl = document.getElementById('aiImageSelectedName');
+      nameEl.innerText = `🖼️ เลือกรูปภาพแล้ว: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+      nameEl.classList.remove('hidden');
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        currentAiImageBase64 = event.target.result;
+        currentAiImageMime = file.type || 'image/jpeg';
+
+        const previewImg = document.getElementById('aiImagePreviewThumbnail');
+        previewImg.src = currentAiImageBase64;
+        document.getElementById('aiImagePreviewThumbnailBox').classList.remove('hidden');
+
+        const actionBox = document.getElementById('aiImageActionBox');
+        if (actionBox) actionBox.classList.remove('hidden');
+      };
+      reader.readAsDataURL(file);
+
+      // Hide previous extraction if any
+      document.getElementById('aiExtractedPreview').classList.add('hidden');
+      const saveBtn = document.getElementById('saveAiExtractedBtn');
+      saveBtn.disabled = true;
+      saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+
+    function handleAiExcelFileChosen(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      selectedAiExcelFile = file;
+
+      const nameEl = document.getElementById('aiExcelSelectedName');
+      nameEl.innerText = `📊 เลือกไฟล์แล้ว: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+      nameEl.classList.remove('hidden');
+
+      const actionBox = document.getElementById('aiExcelActionBox');
+      if (actionBox) actionBox.classList.remove('hidden');
+
+      // Hide previous extraction if any
+      document.getElementById('aiExtractedPreview').classList.add('hidden');
+      const saveBtn = document.getElementById('saveAiExtractedBtn');
+      saveBtn.disabled = true;
+      saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+
+    // ==========================================
+    // STEP 2: START AI ANALYSIS (BUTTON CLICK)
+    // ==========================================
+    async function startAiPdfAnalysis() {
+      if (!selectedAiPdfFile) {
+        alert('กรุณาเลือกไฟล์ PDF ก่อน');
+        return;
+      }
+      const setName = document.getElementById('aiUploadGradeInput').value.trim() || 'ชุดข้อสอบนำเข้า';
+
+      document.getElementById('aiProcessingStatus').classList.remove('hidden');
+      document.getElementById('aiStatusText').innerText = 'กำลังอ่านไฟล์ PDF และส่งให้ AI Gemini วิเคราะห์...';
+      document.getElementById('aiExtractedPreview').classList.add('hidden');
+
+      try {
+        const arrayBuffer = await selectedAiPdfFile.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullPdfText = '';
+
+        for (let i = 1; i <= Math.min(pdf.numPages, 15); i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          const strings = content.items.map(item => item.str);
+          fullPdfText += `\n--- หน้า ${i} ---\n` + strings.join(' ');
+        }
+
+        document.getElementById('aiStatusText').innerText = '⚡ AI Gemini กำลังแปลงโจทย์ทุกข้อ สูตรคณิต KaTeX ตัวเลือก และเฉลย...';
+        extractedQuestionsBuffer = await extractQuestionsWithGemini(fullPdfText, setName);
+
+        if (!extractedQuestionsBuffer || extractedQuestionsBuffer.length === 0) {
+          throw new Error('AI ไม่พบข้อสอบในไฟล์ PDF หรือรูปแบบไม่ถูกต้อง');
+        }
+
+        renderAiExtractedPreview();
+      } catch (err) {
+        console.error('PDF Analysis Error:', err);
+        document.getElementById('aiProcessingStatus').classList.add('hidden');
+        alert('เกิดข้อผิดพลาดในการวิเคราะห์ PDF: ' + err.message);
+      }
+    }
+
+    async function startAiImageAnalysis() {
+      if (!currentAiImageBase64) {
+        alert('กรุณาเลือกหรือถ่ายภาพข้อสอบก่อน');
+        return;
+      }
+      const setName = document.getElementById('aiUploadGradeInput').value.trim() || 'ชุดข้อสอบนำเข้า';
+
+      document.getElementById('aiProcessingStatus').classList.remove('hidden');
+      document.getElementById('aiStatusText').innerText = '👁️ AI Gemini Vision กำลังอ่านภาพข้อสอบ แปลงสูตร KaTeX และวิเคราะห์เฉลย...';
+      document.getElementById('aiExtractedPreview').classList.add('hidden');
+
+      try {
+        extractedQuestionsBuffer = await extractQuestionsFromImageWithGemini(currentAiImageBase64, currentAiImageMime, setName);
+
+        if (!extractedQuestionsBuffer || extractedQuestionsBuffer.length === 0) {
+          throw new Error('AI ไม่พบข้อสอบในรูปภาพ กรุณาตรวจสอบความชัดของภาพ');
+        }
+
+        renderAiExtractedPreview();
+      } catch (err) {
+        console.error('Image OCR Analysis Error:', err);
+        document.getElementById('aiProcessingStatus').classList.add('hidden');
+        alert('เกิดข้อผิดพลาดในการวิเคราะห์รูปภาพด้วย AI: ' + err.message);
+      }
+    }
+
+    async function startAiExcelAnalysis() {
+      if (!selectedAiExcelFile) {
+        alert('กรุณาเลือกไฟล์ Excel/CSV ก่อน');
+        return;
+      }
+      const setName = document.getElementById('aiUploadGradeInput').value.trim() || 'ชุดข้อสอบนำเข้า';
+
+      document.getElementById('aiProcessingStatus').classList.remove('hidden');
+      document.getElementById('aiStatusText').innerText = 'กำลังอ่านไฟล์ตารางและส่งให้ AI วิเคราะห์...';
+      document.getElementById('aiExtractedPreview').classList.add('hidden');
+
+      try {
+        const ext = selectedAiExcelFile.name.split('.').pop().toLowerCase();
+        let extractedText = '';
+
+        if ((ext === 'xlsx' || ext === 'xls') && typeof XLSX !== 'undefined') {
+          const arrayBuffer = await selectedAiExcelFile.arrayBuffer();
+          const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          extractedText = XLSX.utils.sheet_to_csv(worksheet);
+        } else {
+          extractedText = await selectedAiExcelFile.text();
+        }
+
+        document.getElementById('aiBulkTextInput').value = extractedText;
+        document.getElementById('aiStatusText').innerText = '⚡ AI Gemini กำลังวิเคราะห์ตาราง แปลงสูตร KaTeX และแยกเฉลย...';
+
+        extractedQuestionsBuffer = await extractQuestionsWithGemini(extractedText, setName);
+
+        if (!extractedQuestionsBuffer || extractedQuestionsBuffer.length === 0) {
+          throw new Error('AI ไม่พบข้อสอบในตาราง Excel');
+        }
+
+        renderAiExtractedPreview();
+      } catch (err) {
+        console.error('Excel Analysis Error:', err);
+        document.getElementById('aiProcessingStatus').classList.add('hidden');
+        alert('เกิดข้อผิดพลาดในการอ่านและวิเคราะห์ไฟล์ Excel: ' + err.message);
+      }
+    }
+
+    async function callGeminiApi(payload) {
+      const apiKey = (EMBEDDED_GEMINI_API_KEY || '').trim();
+      const models = [
+        'gemini-3.6-flash',
+        'gemini-3.5-flash-lite',
+        'gemini-3.1-pro',
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash'
+      ];
+      let lastError = null;
+
+      // 1. Direct call to Google Generative Language API
+      for (const model of models) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+          let response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (response.status === 400 && payload.generationConfig && payload.generationConfig.responseMimeType) {
+            const fallbackPayload = JSON.parse(JSON.stringify(payload));
+            delete fallbackPayload.generationConfig.responseMimeType;
+            response = await fetch(url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(fallbackPayload)
+            });
+          }
+
+          if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            const errMsg = errData.error ? errData.error.message : `HTTP ${response.status}`;
+            throw new Error(`[${model}] ${errMsg}`);
+          }
+
+          const data = await response.json();
+          if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+            throw new Error('AI ไม่ได้ส่งเนื้อหาคำตอบกลับมา');
+          }
+
+          const text = data.candidates[0].content.parts[0].text;
+          return text;
+        } catch (err) {
+          lastError = err;
+          console.warn(`Direct call with ${model} failed:`, err);
+        }
+      }
+
+      // 2. Fallback via Cloudflare Worker Proxy
+      if (cloudBackendUrl) {
+        try {
+          const workerUrl = `${cloudBackendUrl.replace(/\/+$/, '')}/api/ai`;
+          const workerRes = await fetch(workerUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              apiKey: apiKey,
+              model: 'gemini-1.5-flash',
+              payload: payload
+            })
+          });
+
+          if (workerRes.ok) {
+            const data = await workerRes.json();
+            if (data.success && data.data && data.data.candidates && data.data.candidates[0] && data.data.candidates[0].content) {
+              return data.data.candidates[0].content.parts[0].text;
+            }
+          }
+        } catch (err) {
+          console.warn('Worker AI Proxy fallback failed:', err);
+        }
+      }
+
+      throw lastError || new Error('ไม่สามารถเชื่อมต่อ AI Gemini ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต');
+    }
+
+    function parseGeminiJsonQuestions(rawText, fallbackGrade) {
+      let cleaned = rawText.trim();
+      if (cleaned.startsWith('```')) {
+        cleaned = cleaned.replace(/^```[a-zA-Z]*\n?/, '').replace(/```\s*$/, '').trim();
+      }
+
+      const firstBracket = cleaned.indexOf('[');
+      const lastBracket = cleaned.lastIndexOf(']');
+      if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+        cleaned = cleaned.substring(firstBracket, lastBracket + 1);
+      }
+
+      const parsed = JSON.parse(cleaned);
+      if (!Array.isArray(parsed)) {
+        throw new Error('ข้อมูลที่ AI ตอบกลับไม่ได้เป็นรายการข้อสอบ (Array)');
+      }
+
+      return parsed.map(item => ({
+        question: item.question || 'โจทย์ข้อสอบ',
+        choices: Array.isArray(item.choices) && item.choices.length === 4 ? item.choices : ['ก', 'ข', 'ค', 'ง'],
+        correctIndex: typeof item.correctIndex === 'number' ? item.correctIndex : 0,
+        explanation: item.explanation || '',
+        grade: item.grade || fallbackGrade || 'ชุดข้อสอบนำเข้า'
+      }));
+    }
+
+    async function extractQuestionsWithGemini(pdfOrText, grade) {
+      const prompt = `คุณคือผู้เชี่ยวชาญด้านการออกข้อสอบและการศึกษา กรุณาวิเคราะห์ข้อความจากข้อสอบต่อไปนี้ แล้วแปลงเป็น JSON array ของโจทย์ข้อสอบทั้งหมดทุกข้อที่พบในเอกสาร:
+ข้อความจากเอกสาร:
+${pdfOrText.substring(0, 15000)}
+
+ข้อกำหนดสำคัญ:
+1. สกัดโจทย์ "ทุกข้อ" ที่พบ ห้ามข้ามหรือตัดทอน
+2. แปลงสูตร สมการ และสัญลักษณ์ทางคณิตศาสตร์/วิทยาศาสตร์ ทั้งหมดให้อยู่ในรูป LaTeX KaTeX โดยครอบด้วย $ เช่น $x^2 + 5x = 0$, $\\frac{a}{b}$, $\\sqrt{144}$, $\\pm$, $\\pi$
+3. สกัดตัวเลือกทั้ง 4 ข้อให้ครบ (ก, ข, ค, ง หรือ 1, 2, 3, 4)
+4. กำหนดเฉลย correctIndex เป็นตัวเลข 0, 1, 2, 3 (0=ก, 1=ข, 2=ค, 3=ง)
+5. คำอธิบายวิธีคิด (explanation) สั้นๆ
+6. ตอบกลับเป็น JSON Array เท่านั้น (ห้ามมีคำบรรยายอื่นนอกเหนือจาก JSON) ในรูปแบบ:
+[
+  {
+    "question": "ข้อความโจทย์พร้อมสูตร LaTeX",
+    "choices": ["ตัวเลือก ก", "ตัวเลือก ข", "ตัวเลือก ค", "ตัวเลือก ง"],
+    "correctIndex": 0,
+    "explanation": "คำอธิบายวิธีคิด",
+    "grade": "${grade}"
+  }
+]`;
+
+      const payload = {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.1,
+          responseMimeType: 'application/json'
+        }
+      };
+
+      const rawJson = await callGeminiApi(payload);
+      return parseGeminiJsonQuestions(rawJson, grade);
+    }
+
+    async function extractQuestionsFromImageWithGemini(base64Image, mimeType, grade) {
+      const prompt = `คุณคือผู้เชี่ยวชาญด้าน OCR และการสกัดข้อสอบจากภาพถ่ายเอกสาร/ใบงาน
+กรุณาวิเคราะห์ภาพถ่ายข้อสอบนี้อย่างละเอียด และแปลงเป็น JSON array ของโจทย์ข้อสอบ "ทุกข้อ" ที่มองเห็นในรูปภาพ:
+
+ข้อกำหนดสำคัญมาก:
+1. อ่านและสกัดข้อสอบ "ทุกข้อ" ในรูปภาพ (เช่น หากมี 4 ข้อ ต้องสกัดให้ครบทั้ง 4 ข้อ ห้ามส่งมาแค่ข้อเดียว)
+2. สกัดสูตร สมการ และสัญลักษณ์คณิตศาสตร์ทั้งหมด แปลงเป็น LaTeX KaTeX ครอบด้วย $ เช่น $x^2 + 4$, $\\frac{2}{3}$, $\\sqrt{x}$, $\\times$, $\\div$
+3. สกัดตัวเลือกทั้ง 4 ข้อ (ก, ข, ค, ง หรือ A, B, C, D หรือ 1, 2, 3, 4)
+4. ตรวจดูเฉลยในภาพ (หากมีการวงกลม กากบาท ไฮไลท์ หรือเฉลยท้ายข้อ) หรือวิเคราะห์หาคำตอบที่ถูกต้องที่สุด กำหนด correctIndex เป็นตัวเลข 0 ถึง 3 (0=ก, 1=ข, 2=ค, 3=ง)
+5. ระบุคำอธิบายวิธีคิดสั้นๆ (explanation)
+6. ตอบกลับเป็น JSON Array เท่านั้น (ห้ามมีข้อความอื่นนอก JSON) ในรูปแบบ:
+[
+  {
+    "question": "ข้อความโจทย์พร้อมสูตร LaTeX",
+    "choices": ["ตัวเลือก ก", "ตัวเลือก ข", "ตัวเลือก ค", "ตัวเลือก ง"],
+    "correctIndex": 0,
+    "explanation": "คำอธิบายวิธีคิด",
+    "grade": "${grade}"
+  }
+]`;
+
+      const cleanBase64 = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
+
+      const payload = {
+        contents: [{
+          parts: [
+            { text: prompt },
+            {
+              inlineData: {
+                mimeType: mimeType || 'image/jpeg',
+                data: cleanBase64
+              }
+            }
+          ]
+        }],
+        generationConfig: {
+          temperature: 0.1,
+          responseMimeType: 'application/json'
+        }
+      };
+
+      const rawJson = await callGeminiApi(payload);
+      return parseGeminiJsonQuestions(rawJson, grade);
+    }
+
+    // ==========================================
+    // RAW TEXT PARSER
+    // ==========================================
+    function handleProcessAiBulkText() {
+      const rawText = document.getElementById('aiBulkTextInput').value.trim();
+      const setName = document.getElementById('aiUploadGradeInput').value.trim() || 'ชุดข้อสอบนำเข้า';
+
+      if (!rawText) {
+        alert('กรุณากรอกหรือวางข้อความข้อสอบ');
+        return;
+      }
+
+      const lines = rawText.split('\n');
+      extractedQuestionsBuffer = [];
+
+      lines.forEach(line => {
+        if (!line.trim()) return;
+        let parts = line.split('|');
+        if (parts.length < 5) parts = line.split('\t');
+        if (parts.length < 5) parts = line.split(',');
+
+        if (parts.length >= 5) {
+          const qText = parts[0].trim();
+          const c0 = parts[1].trim();
+          const c1 = parts[2].trim();
+          const c2 = parts[3].trim();
+          const c3 = parts[4].trim();
+          
+          let correctIdx = 0;
+          if (parts[5]) {
+            const ansStr = parts[5].trim().toLowerCase();
+            if (ansStr === 'ข' || ansStr === '2' || ansStr === 'b') correctIdx = 1;
+            else if (ansStr === 'ค' || ansStr === '3' || ansStr === 'c') correctIdx = 2;
+            else if (ansStr === 'ง' || ansStr === '4' || ansStr === 'd') correctIdx = 3;
+          }
+
+          extractedQuestionsBuffer.push({
+            question: qText,
+            choices: [c0, c1, c2, c3],
+            correctIndex: correctIdx,
+            explanation: parts[6] ? parts[6].trim() : '',
+            grade: setName
+          });
+        }
+      });
+
+      if (extractedQuestionsBuffer.length > 0) {
+        renderAiExtractedPreview();
+      } else {
+        alert('ไม่สามารถอ่านข้อมูลได้ กรุณาตรวจสอบรูปแบบข้อความ (ใช้ | หรือ Tab คั่นระหว่างโจทย์และชอยส์)');
+      }
+    }
+
+    // ==========================================
+    // STEP 3: PREVIEW & SAVE TO SYSTEM
+    // ==========================================
+    function renderAiExtractedPreview() {
+      document.getElementById('aiProcessingStatus').classList.add('hidden');
+      document.getElementById('aiExtractedPreview').classList.remove('hidden');
+      document.getElementById('aiExtractedCount').innerText = `พบ ${extractedQuestionsBuffer.length} ข้อ`;
+
+      const list = document.getElementById('aiExtractedList');
+      list.innerHTML = '';
+
+      const choiceLabels = ['ก', 'ข', 'ค', 'ง'];
+
+      extractedQuestionsBuffer.forEach((q, idx) => {
+        const item = document.createElement('div');
+        item.className = 'p-3 rounded-xl bg-white border border-slate-200 text-xs space-y-1.5 shadow-sm';
+        item.innerHTML = `
+          <div class="font-bold text-slate-900">${idx + 1}. ${q.question}</div>
+          <div class="grid grid-cols-2 gap-1 text-slate-700">
+            ${(q.choices || ['ก', 'ข', 'ค', 'ง']).map((c, i) => `<div><span class="font-bold ${i === q.correctIndex ? 'text-emerald-700' : 'text-slate-500'}">(${choiceLabels[i]})</span> ${c} ${i === q.correctIndex ? '✓' : ''}</div>`).join('')}
+          </div>
+          ${q.explanation ? `<div class="text-[11px] text-amber-800 bg-amber-50 px-2 py-1 rounded-lg">💡 ${q.explanation}</div>` : ''}
+        `;
+        list.appendChild(item);
+      });
+
+      renderMath(list);
+
+      const saveBtn = document.getElementById('saveAiExtractedBtn');
+      saveBtn.disabled = false;
+      saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+
+    async function handleSaveAiExtractedQuestions() {
+      if (extractedQuestionsBuffer.length === 0) return;
+      const targetGrade = document.getElementById('aiUploadGradeInput').value.trim();
+      if (!targetGrade) {
+        alert('กรุณาระบุชื่อชุดข้อสอบที่จะนำเข้า เช่น คณิต ม.1 หรือ ไทย ม.4');
+        return;
+      }
+
+      extractedQuestionsBuffer.forEach(q => {
+        questions.push({
+          id: 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          teacherId: currentTeacher ? currentTeacher.id : 'default',
+          grade: targetGrade,
+          question: q.question,
+          image: '',
+          choices: q.choices || ['ก', 'ข', 'ค', 'ง'],
+          correctIndex: q.correctIndex || 0,
+          explanation: q.explanation || '',
+          timeLimit: 30
+        });
+      });
+
+      saveLocalData();
+      await syncQuestionsToCloud();
+      populateTeacherGradeSelects();
+      renderTeacherQuestionList();
+      renderKPIStats();
+      renderExamSetsGrid();
+      renderTeachersManagementList();
+      closeAiUploadModal();
+      alert(`🎉 บันทึกข้อสอบนำเข้า ${extractedQuestionsBuffer.length} ข้อ เข้าสู่ชุด "${targetGrade}" เรียบร้อยแล้ว!`);
+    }
+
+    // Aliases for backward compatibility
+    function openPdfImportModal() { openAiUploadModal('pdf'); }
+    function closePdfImportModal() { closeAiUploadModal(); }
+    function openTextImportModal() { openAiUploadModal('excel'); }
+    function closeTextImportModal() { closeAiUploadModal(); }
+  </script>
+</body>
+</html>

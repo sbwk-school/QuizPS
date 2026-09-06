@@ -1,0 +1,20 @@
+{
+  "name": "quizlive-math",
+  "version": "1.0.0",
+  "description": "Online Mathematics Examination System with KaTeX, PDF AI Import, and Cloudflare Pages",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "deploy": "npx wrangler pages deploy . --project-name=quizlive-math"
+  },
+  "keywords": [
+    "quiz",
+    "math",
+    "katex",
+    "cloudflare-pages",
+    "gemini-ai",
+    "education"
+  ],
+  "author": "",
+  "license": "MIT"
+}
