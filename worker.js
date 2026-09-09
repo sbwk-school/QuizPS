@@ -15,7 +15,8 @@ let memoryStore = {
   teachers: {},
   questions: {}, // Keyed by teacherId: { 'kru_somchai': [...] }
   sessions: {},
-  scores: []
+  scores: [],
+  settings: null
 };
 
 const corsHeaders = {
@@ -100,10 +101,28 @@ export default {
           return new Response(JSON.stringify({ success: true, scores: scores }), { headers: corsHeaders });
         }
 
+        // 4. ดึงการตั้งค่าระบบและโมเดล AI (GET /api/settings หรือ ?action=getSettings)
+        if (path === '/api/settings' || actionParam === 'getSettings') {
+          let settings = {
+            aiModel: 'gemini-2.5-flash',
+            aiFallbackModel: 'gemini-1.5-flash',
+            apiKey: 'AQ.Ab8RN6KkcvPXRhcrmUQGPD4OV__HpKA1Eg4dxnQj8K3U_bSaZw'
+          };
+
+          if (env && env.QUIZ_KV) {
+            const kvSettings = await env.QUIZ_KV.get('system_settings', 'json');
+            if (kvSettings) settings = { ...settings, ...kvSettings };
+          } else if (memoryStore.settings) {
+            settings = { ...settings, ...memoryStore.settings };
+          }
+
+          return new Response(JSON.stringify({ success: true, settings: settings }), { headers: corsHeaders });
+        }
+
         // Default Root Health Check
         return new Response(JSON.stringify({
           status: 'online',
-          service: 'QuizLive Math Cloudflare Worker API (Multi-Teacher Enabled)',
+          service: 'QuizLive Math Cloudflare Worker API (Multi-Teacher & Dynamic AI Model Enabled)',
           time: new Date().toISOString()
         }), { headers: corsHeaders });
       }
@@ -153,7 +172,7 @@ export default {
         // 3. ส่งคะแนนสอบ (POST /api/submit หรือ { action: 'submitScore' })
         if (path === '/api/submit' || action === 'submitScore') {
           const result = body.result || {};
-          result.timestamp = new Date().toISOString();
+          result.timestamp = result.timestamp || new Date().toISOString();
 
           memoryStore.scores.push(result);
 
@@ -164,6 +183,35 @@ export default {
           }
 
           return new Response(JSON.stringify({ success: true, message: 'บันทึกคะแนนสำเร็จ' }), { headers: corsHeaders });
+        }
+
+        // 3.1 ล้างคะแนนสอบ (POST /api/scores/clear หรือ { action: 'clearScores' })
+        if (path === '/api/scores/clear' || action === 'clearScores') {
+          const teacherId = body.teacherId;
+          const grade = body.grade;
+
+          let currentScores = memoryStore.scores;
+          if (env && env.QUIZ_KV) {
+            const kvScores = await env.QUIZ_KV.get('scores', 'json');
+            if (kvScores) currentScores = kvScores;
+          }
+
+          currentScores = currentScores.filter(s => {
+            if (teacherId && teacherId !== 'admin' && s.teacherId && s.teacherId !== teacherId) {
+              return true;
+            }
+            if (grade && grade !== 'ALL' && s.grade !== grade) {
+              return true;
+            }
+            return false;
+          });
+
+          memoryStore.scores = currentScores;
+          if (env && env.QUIZ_KV) {
+            await env.QUIZ_KV.put('scores', JSON.stringify(currentScores));
+          }
+
+          return new Response(JSON.stringify({ success: true, message: 'ล้างคะแนนสำเร็จ' }), { headers: corsHeaders });
         }
 
         // 4. บัญชีคุณครู (POST /api/auth หรือ { action: 'authTeacher' })
@@ -208,24 +256,93 @@ export default {
           }
         }
 
-        // 5. AI Gemini Proxy (POST /api/ai หรือ { action: 'aiAnalyze' })
-        if (path === '/api/ai' || action === 'aiAnalyze') {
-          const apiKey = body.apiKey || 'AQ.Ab8RN6KkcvPXRhcrmUQGPD4OV__HpKA1Eg4dxnQj8K3U_bSaZw';
-          const model = body.model || 'gemini-1.5-flash';
-          const payload = body.payload;
+        // 5. บันทึกการตั้งค่าระบบและโมเดล AI (POST /api/settings หรือ { action: 'saveSettings' })
+        if (path === '/api/settings' || action === 'saveSettings') {
+          let newSettings = body.settings || {};
+          let currentSettings = {
+            aiModel: 'gemini-2.5-flash',
+            aiFallbackModel: 'gemini-1.5-flash',
+            apiKey: 'AQ.Ab8RN6KkcvPXRhcrmUQGPD4OV__HpKA1Eg4dxnQj8K3U_bSaZw'
+          };
 
-          const googleRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-
-          const data = await googleRes.json();
-          if (!googleRes.ok) {
-            return new Response(JSON.stringify({ success: false, error: data.error ? data.error.message : 'Google API Error' }), { headers: corsHeaders, status: googleRes.status });
+          if (env && env.QUIZ_KV) {
+            const kvSettings = await env.QUIZ_KV.get('system_settings', 'json');
+            if (kvSettings) currentSettings = { ...currentSettings, ...kvSettings };
+          } else if (memoryStore.settings) {
+            currentSettings = { ...currentSettings, ...memoryStore.settings };
           }
 
-          return new Response(JSON.stringify({ success: true, data: data }), { headers: corsHeaders });
+          const merged = { ...currentSettings, ...newSettings };
+          memoryStore.settings = merged;
+
+          if (env && env.QUIZ_KV) {
+            await env.QUIZ_KV.put('system_settings', JSON.stringify(merged));
+          }
+
+          return new Response(JSON.stringify({ success: true, settings: merged, message: 'บันทึกการตั้งค่าโมเดล AI ลง Cloudflare KV เรียบร้อยแล้ว' }), { headers: corsHeaders });
+        }
+
+        // 6. AI Gemini Proxy (POST /api/ai หรือ { action: 'aiAnalyze' })
+        // รองรับ Bearer OAuth Token (AQ...) และ API Key (AIza...) พร้อม Fallback อัตโนมัติ
+        if (path === '/api/ai' || action === 'aiAnalyze') {
+          let sysSettings = {
+            aiModel: 'gemini-2.5-flash',
+            aiFallbackModel: 'gemini-1.5-flash',
+            apiKey: 'AQ.Ab8RN6KkcvPXRhcrmUQGPD4OV__HpKA1Eg4dxnQj8K3U_bSaZw'
+          };
+          if (env && env.QUIZ_KV) {
+            const kvSettings = await env.QUIZ_KV.get('system_settings', 'json');
+            if (kvSettings) sysSettings = { ...sysSettings, ...kvSettings };
+          } else if (memoryStore.settings) {
+            sysSettings = { ...sysSettings, ...memoryStore.settings };
+          }
+
+          const rawApiKey = (body.apiKey || sysSettings.apiKey || '').trim();
+          const apiKey = rawApiKey.replace(/[^\x21-\x7E]/g, '').trim();
+          const rawModel = (body.model || sysSettings.aiModel || 'gemini-2.5-flash').trim();
+          const model = rawModel.replace(/[^\x21-\x7E]/g, '').trim();
+          const payload = body.payload;
+
+          const isOAuth = apiKey.startsWith('ya29.');
+
+          async function callGoogleApi(targetModel) {
+            let googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent`;
+            const reqHeaders = { 'Content-Type': 'application/json' };
+            if (isOAuth) {
+              reqHeaders['Authorization'] = `Bearer ${apiKey}`;
+            } else {
+              googleUrl += `?key=${encodeURIComponent(apiKey)}`;
+            }
+
+            return await fetch(googleUrl, {
+              method: 'POST',
+              headers: reqHeaders,
+              body: JSON.stringify(payload)
+            });
+          }
+
+          let googleRes = await callGoogleApi(model);
+          let data = await googleRes.json().catch(() => ({}));
+
+          // Fallback if primary model fails (e.g. 404 Not Found or deprecated)
+          if (!googleRes.ok && sysSettings.aiFallbackModel && sysSettings.aiFallbackModel !== model) {
+            try {
+              const fbRes = await callGoogleApi(sysSettings.aiFallbackModel);
+              if (fbRes.ok) {
+                const fbData = await fbRes.json();
+                return new Response(JSON.stringify({ success: true, data: fbData, usedModel: sysSettings.aiFallbackModel }), { headers: corsHeaders });
+              }
+            } catch(e){}
+          }
+
+          if (!googleRes.ok) {
+            return new Response(JSON.stringify({
+              success: false,
+              error: data.error ? data.error.message : `Google API Error (${googleRes.status})`
+            }), { headers: corsHeaders, status: googleRes.status });
+          }
+
+          return new Response(JSON.stringify({ success: true, data: data, usedModel: model }), { headers: corsHeaders });
         }
       }
 
