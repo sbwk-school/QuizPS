@@ -325,6 +325,9 @@
         <button type="button" id="tabBtnSets" onclick="switchDashboardTab('sets')" class="flex-1 min-w-[130px] py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm">
           <span>📚</span> <span id="tabBtnSetsLabel">ชุดข้อสอบ</span> (<span id="badgeSetsCount">0</span>)
         </button>
+        <button type="button" id="tabBtnScores" onclick="switchDashboardTab('scores')" class="flex-1 min-w-[130px] py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition flex items-center justify-center gap-1.5">
+          <span>📊</span> คะแนนนักเรียน (<span id="badgeScoresCount">0</span>)
+        </button>
         <button type="button" id="tabBtnTeachers" onclick="switchDashboardTab('teachers')" class="flex-1 min-w-[130px] py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold text-slate-600 hover:bg-slate-50 transition flex items-center justify-center gap-1.5">
           <span>👥</span> ข้อมูลครู (<span id="badgeTeachersCount">0</span>)
         </button>
@@ -358,6 +361,165 @@
             <!-- Dynamically populated -->
           </div>
         </div>
+      </div>
+
+      <!-- ========================================================= -->
+      <!-- SUB-TAB: STUDENT SCORES & LEADERBOARD (คะแนนนักเรียน)    -->
+      <!-- ========================================================= -->
+      <div id="tabContentScores" class="hidden space-y-4">
+        
+        <!-- Score Filters & Controls Toolbar -->
+        <div class="bg-white rounded-3xl p-5 sm:p-6 card-shadow border border-slate-100 space-y-4">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+            <div>
+              <h3 id="tabTitleScores" class="font-heading font-extrabold text-lg sm:text-xl text-slate-900 flex items-center gap-2">
+                <span>📊</span> ผลคะแนนสอบของนักเรียน
+              </h3>
+              <p class="text-xs text-slate-500 font-medium">
+                ดูคะแนนนักเรียนรายบุคคล กรองตามชุดข้อสอบ/ระดับชั้น ห้องเรียน และจัดเรียงตามเลขที่หรือคะแนน
+              </p>
+            </div>
+
+            <!-- Action buttons: Sync & Export & Clear -->
+            <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+              <button onclick="syncScoresFromCloud(true)" class="px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-bold transition flex items-center gap-1.5">
+                <span>🔄</span> รีเฟรชคะแนนสด
+              </button>
+              <button onclick="exportScoresToCsv()" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+                <span>📥</span> ส่งออก Excel (CSV)
+              </button>
+              <button onclick="handleClearScores()" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 text-xs font-bold transition flex items-center gap-1">
+                <span>🗑️</span> ล้างคะแนน
+              </button>
+            </div>
+          </div>
+
+          <!-- Filters Row: Grade, Room, Search, Sort -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            
+            <!-- Filter 1: Grade / Exam Set -->
+            <div class="space-y-1">
+              <label class="text-xs font-bold text-slate-700 flex items-center gap-1">
+                <span>📚</span> ชุดข้อสอบ / ระดับชั้น:
+              </label>
+              <select id="scoreFilterGrade" onchange="renderScoresList()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-900 font-semibold focus:outline-none focus:border-blue-600 focus:bg-white">
+                <option value="ALL">ทั้งหมดทุกชุดวิชา</option>
+              </select>
+            </div>
+
+            <!-- Filter 2: Room (ห้องเรียน) -->
+            <div class="space-y-1">
+              <label class="text-xs font-bold text-slate-700 flex items-center gap-1">
+                <span>🏫</span> ห้องเรียน:
+              </label>
+              <select id="scoreFilterRoom" onchange="renderScoresList()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-900 font-semibold focus:outline-none focus:border-blue-600 focus:bg-white">
+                <option value="ALL">ทุกห้องเรียน</option>
+              </select>
+            </div>
+
+            <!-- Filter 3: Sort By (เรียงลำดับ) -->
+            <div class="space-y-1">
+              <label class="text-xs font-bold text-slate-700 flex items-center gap-1">
+                <span>🔢</span> จัดเรียงข้อมูล:
+              </label>
+              <select id="scoreSortSelect" onchange="renderScoresList()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-900 font-semibold focus:outline-none focus:border-blue-600 focus:bg-white">
+                <option value="no-asc" selected>🔢 เรียงตามเลขที่ (1 ➔ 50)</option>
+                <option value="no-desc">🔢 เรียงตามเลขที่ (มาก ➔ น้อย)</option>
+                <option value="score-desc">🏆 คะแนนสูงสุด ➔ ต่ำสุด</option>
+                <option value="score-asc">🔻 คะแนนต่ำสุด ➔ สูงสุด</option>
+                <option value="time-desc">⏱️ ล่าสุดก่อน (ตามเวลาส่ง)</option>
+              </select>
+            </div>
+
+            <!-- Filter 4: Search Input -->
+            <div class="space-y-1">
+              <label class="text-xs font-bold text-slate-700 flex items-center gap-1">
+                <span>🔍</span> ค้นหาชื่อ / เลขที่:
+              </label>
+              <input type="text" id="scoreSearchInput" oninput="renderScoresList()" placeholder="พิมพ์เลขที่ หรือ ชื่อนักเรียน..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white">
+            </div>
+
+          </div>
+
+          <!-- Summary Mini Cards Row -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+            <div class="p-3 rounded-2xl bg-blue-50/60 border border-blue-100 flex items-center gap-3">
+              <span class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center text-sm font-bold shrink-0">👥</span>
+              <div>
+                <div class="text-[11px] text-slate-500 font-medium">ส่งสอบแล้ว</div>
+                <div class="font-heading font-black text-lg text-blue-900"><span id="scoreSummaryTotalStudents">0</span> <span class="text-xs font-normal text-slate-400">คน</span></div>
+              </div>
+            </div>
+
+            <div class="p-3 rounded-2xl bg-emerald-50/60 border border-emerald-100 flex items-center gap-3">
+              <span class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-sm font-bold shrink-0">📈</span>
+              <div>
+                <div class="text-[11px] text-slate-500 font-medium">คะแนนเฉลี่ย</div>
+                <div class="font-heading font-black text-lg text-emerald-900"><span id="scoreSummaryAvg">0</span> <span class="text-xs font-normal text-slate-400" id="scoreSummaryAvgPercent">(-%)</span></div>
+              </div>
+            </div>
+
+            <div class="p-3 rounded-2xl bg-amber-50/60 border border-amber-100 flex items-center gap-3">
+              <span class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center text-sm font-bold shrink-0">🥇</span>
+              <div>
+                <div class="text-[11px] text-slate-500 font-medium">คะแนนสูงสุด</div>
+                <div class="font-heading font-black text-lg text-amber-900"><span id="scoreSummaryMax">0</span> <span class="text-xs font-normal text-slate-400">คะแนน</span></div>
+              </div>
+            </div>
+
+            <div class="p-3 rounded-2xl bg-purple-50/60 border border-purple-100 flex items-center gap-3">
+              <span class="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center text-sm font-bold shrink-0">📉</span>
+              <div>
+                <div class="text-[11px] text-slate-500 font-medium">คะแนนต่ำสุด</div>
+                <div class="font-heading font-black text-lg text-purple-900"><span id="scoreSummaryMin">0</span> <span class="text-xs font-normal text-slate-400">คะแนน</span></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Scores Table Container -->
+        <div class="bg-white rounded-3xl p-5 sm:p-6 card-shadow border border-slate-100 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-700">รายชื่อนักเรียนและคะแนนที่บันทึก (<span id="scoreFilteredCount">0</span> รายการ)</span>
+            <span class="text-[11px] text-slate-400">เรียงตามเลขที่และห้องเรียน</span>
+          </div>
+
+          <div class="overflow-x-auto rounded-2xl border border-slate-200">
+            <table class="w-full text-left border-collapse text-xs sm:text-sm">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold text-[11px] uppercase tracking-wider">
+                  <th class="py-3 px-3 text-center w-16">เลขที่</th>
+                  <th class="py-3 px-3.5">ชื่อ - นามสกุล</th>
+                  <th class="py-3 px-3 text-center">ห้อง</th>
+                  <th class="py-3 px-3.5">ระดับชั้น / ชุดวิชา</th>
+                  <th class="py-3 px-3 text-center">คะแนนที่ได้</th>
+                  <th class="py-3 px-3 text-center">ร้อยละ (%)</th>
+                  <th class="py-3 px-3 text-center">ผลประเมิน</th>
+                  <th class="py-3 px-3 text-center hidden md:table-cell">ห้องสอบ PIN</th>
+                  <th class="py-3 px-3 text-right hidden lg:table-cell">เวลาที่ส่ง</th>
+                </tr>
+              </thead>
+              <tbody id="scoresTableBody" class="divide-y divide-slate-100 font-medium">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Empty State -->
+          <div id="scoresEmptyState" class="hidden text-center py-12 px-4 rounded-2xl bg-slate-50/50 border-2 border-dashed border-slate-200 space-y-3">
+            <div class="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-200 text-blue-600 text-2xl flex items-center justify-center mx-auto">
+              📊
+            </div>
+            <div class="space-y-1">
+              <h4 class="font-heading font-black text-sm text-slate-800">ยังไม่พบข้อมูลคะแนนสอบ</h4>
+              <p class="text-xs text-slate-500 max-w-sm mx-auto font-medium">
+                เมื่อนักเรียนสแกน QR Code หรือเข้าห้องสอบและส่งคำตอบ คะแนนจะวิ่งเข้ามาแสดงที่ตารางนี้แบบเรียลไทม์ทันทีครับ
+              </p>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- ========================================================= -->
@@ -414,6 +576,9 @@
               </button>
               <button onclick="openAddQuestionChoiceModal()" class="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-bold flex items-center gap-1.5 transition">
                 <span>➕</span> เพิ่มข้อสอบ
+              </button>
+              <button id="adminAiSettingsToolbarBtn" onclick="openAdminAiSettingsModal()" class="hidden px-3 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 text-xs font-bold transition flex items-center gap-1.5" title="ตั้งค่าโมเดล AI (Gemini) ระบบ">
+                <span>🤖 ตั้งค่า AI</span>
               </button>
               <button onclick="openCloudSettingsModal()" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-bold" title="ตั้งค่าหลังบ้าน Cloudflare Worker API">
                 <span>🔗 หลังบ้าน</span>
@@ -707,6 +872,123 @@
           </button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MODAL: ADMIN AI MODEL & SYSTEM SETTINGS (CLOUDFLARE KV)  -->
+  <!-- ======================================================= -->
+  <div id="adminAiSettingsModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 space-y-5 border border-slate-200 shadow-2xl animate-pop my-auto">
+      
+      <!-- Header -->
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
+        <div class="flex items-center gap-2.5">
+          <span class="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center text-xl font-bold shadow-md shadow-purple-200">🤖</span>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-heading font-black text-xl text-slate-900">ตั้งค่าโมเดล AI (Gemini)</h3>
+              <span class="px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 text-[10px] font-black uppercase">แอดมินระบบ</span>
+            </div>
+            <p class="text-xs text-slate-500 font-medium">เปลี่ยนชื่อโมเดล AI และบันทึกลง Cloudflare KV โดยตรง ไม่ต้องแก้โค้ด</p>
+          </div>
+        </div>
+        <button onclick="closeAdminAiSettingsModal()" class="text-slate-400 hover:text-slate-700 text-lg font-bold p-1 rounded-lg hover:bg-slate-100 transition">✕</button>
+      </div>
+
+      <div class="space-y-4">
+        
+        <!-- Field 1: Active Model Name -->
+        <div class="space-y-2 p-4 rounded-2xl bg-blue-50/60 border border-blue-200">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-black text-slate-800 flex items-center gap-1.5">
+              <span>⚡</span> ชื่อโมเดล AI หลักที่ต้องการใช้งาน:
+            </label>
+            <span class="text-[10px] font-bold text-blue-700 font-mono">Google Generative Language API</span>
+          </div>
+
+          <input type="text" id="adminAiModelInput" placeholder="เช่น gemini-2.5-flash" class="w-full bg-white border-2 border-blue-300 rounded-xl px-4 py-2.5 text-sm font-mono font-bold text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition shadow-2xs">
+
+          <!-- Quick Model Chips -->
+          <div class="space-y-1 pt-1">
+            <span class="text-[11px] font-bold text-slate-600">กดเลือกโมเดลด่วน (Quick Select):</span>
+            <div class="flex flex-wrap gap-1.5">
+              <button type="button" onclick="selectQuickAiModel('gemini-2.5-flash')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-blue-100 border border-blue-200 text-blue-800 text-xs font-semibold shadow-2xs transition">
+                ⚡ gemini-2.5-flash <span class="text-[10px] text-emerald-600 font-bold">(แนะนำ)</span>
+              </button>
+              <button type="button" onclick="selectQuickAiModel('gemini-2.5-flash-lite')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-blue-100 border border-blue-200 text-blue-800 text-xs font-semibold shadow-2xs transition">
+                💨 gemini-2.5-flash-lite
+              </button>
+              <button type="button" onclick="selectQuickAiModel('gemini-1.5-flash')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-blue-100 border border-blue-200 text-blue-800 text-xs font-semibold shadow-2xs transition">
+                🏛️ gemini-1.5-flash
+              </button>
+              <button type="button" onclick="selectQuickAiModel('gemini-2.0-flash')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-blue-100 border border-blue-200 text-blue-800 text-xs font-semibold shadow-2xs transition">
+                🚀 gemini-2.0-flash
+              </button>
+              <button type="button" onclick="selectQuickAiModel('gemini-3.5-flash-lite')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-200 text-indigo-800 text-xs font-semibold shadow-2xs transition">
+                ✨ gemini-3.5-flash-lite
+              </button>
+              <button type="button" onclick="selectQuickAiModel('gemini-3.6-flash')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-200 text-indigo-800 text-xs font-semibold shadow-2xs transition">
+                ✨ gemini-3.6-flash
+              </button>
+              <button type="button" onclick="selectQuickAiModel('gemini-3.1-pro')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-200 text-indigo-800 text-xs font-semibold shadow-2xs transition">
+                💎 gemini-3.1-pro
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Field 2: Fallback Model Name -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+            <span>🛡️</span> โมเดลสำรอง (Fallback Model):
+          </label>
+          <input type="text" id="adminAiFallbackModelInput" placeholder="เช่น gemini-1.5-flash" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-xs font-mono font-bold text-slate-800 focus:outline-none focus:bg-white focus:border-blue-600 transition">
+          <p class="text-[11px] text-slate-400">ใช้ทำงานแทนอัตโนมัติหากโมเดลหลักติด Error หรือยังไม่เปิดให้ใช้งานทั่วไป</p>
+        </div>
+
+        <!-- Field 3: API Key / OAuth Token -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <span>🔑</span> Google Gemini API Key / OAuth Token:
+            </label>
+            <button type="button" onclick="toggleAiApiKeyVisibility()" class="text-[11px] text-blue-600 hover:underline font-semibold" id="toggleAiKeyText">
+              👁️ แสดงคีย์
+            </button>
+          </div>
+          <div class="relative">
+            <input type="password" id="adminAiApiKeyInput" placeholder="AIzaSy... or AQ...." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:bg-white focus:border-blue-600 transition pr-10">
+          </div>
+          <p class="text-[11px] text-slate-500">
+            💡 รองรับทั้ง <b>API Key</b> จาก Google AI Studio (<code class="bg-slate-100 px-1 py-0.5 rounded text-slate-700 font-mono">AIzaSy...</code>) และ <b>OAuth2 Token</b> (<code class="bg-slate-100 px-1 py-0.5 rounded text-slate-700 font-mono">AQ...</code>) ระบบจะแปลง Header ส่งให้อัตโนมัติ
+          </p>
+        </div>
+
+        <!-- Test Connection Result Box -->
+        <div id="adminAiTestResultBox" class="hidden p-3.5 rounded-2xl text-xs space-y-1 transition-all">
+          <div id="adminAiTestStatus" class="font-bold flex items-center gap-2"></div>
+          <div id="adminAiTestDetail" class="text-[11px] font-mono break-all"></div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row items-center gap-2.5 pt-2 border-t border-slate-100">
+          <button type="button" onclick="testAdminAiConnection()" id="adminAiTestBtn" class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 font-bold text-xs transition flex items-center justify-center gap-1.5">
+            <span>🧪</span> ทดสอบโมเดล AI
+          </button>
+          
+          <div class="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
+            <button type="button" onclick="closeAdminAiSettingsModal()" class="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition">
+              ปิด
+            </button>
+            <button type="button" onclick="saveAdminAiSettings()" id="adminAiSaveBtn" class="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 font-heading font-black text-xs sm:text-sm text-white shadow-md shadow-blue-200 active:scale-[0.98] transition flex items-center justify-center gap-1.5">
+              <span>💾</span> บันทึกไปที่หลังบ้าน (Cloudflare KV)
+            </button>
+          </div>
+        </div>
+
+      </div>
+
     </div>
   </div>
 
@@ -1175,6 +1457,15 @@
     // Embedded API Key & Cloudflare Backend
     const EMBEDDED_GEMINI_API_KEY = 'AQ.Ab8RN6KkcvPXRhcrmUQGPD4OV__HpKA1Eg4dxnQj8K3U_bSaZw';
     const DEFAULT_CLOUDFLARE_BACKEND = 'https://quizlive-math-api.phubet-hppk.workers.dev';
+    const DEFAULT_AI_MODEL = 'gemini-2.5-flash';
+    const DEFAULT_AI_FALLBACK_MODEL = 'gemini-1.5-flash';
+
+    // System AI Model Settings State (Dynamic & Stored in KV)
+    let currentSystemSettings = {
+      aiModel: localStorage.getItem('quizlive_ai_model') || DEFAULT_AI_MODEL,
+      aiFallbackModel: localStorage.getItem('quizlive_ai_fallback_model') || DEFAULT_AI_FALLBACK_MODEL,
+      apiKey: localStorage.getItem('quizlive_ai_api_key') || EMBEDDED_GEMINI_API_KEY
+    };
 
     // Empty start: No mock/test questions
     const DEFAULT_QUESTIONS = [];
@@ -1207,6 +1498,9 @@
       loadLocalData();
       updateBackendStatusBadge();
       
+      // Sync dynamic AI Model & Settings from Cloudflare KV
+      fetchSystemSettingsFromCloud();
+      
       const urlParams = new URLSearchParams(window.location.search);
       const roomParam = urlParams.get('room');
       const gradeParam = urlParams.get('grade');
@@ -1225,6 +1519,11 @@
       renderMath();
     });
 
+    function cleanAscii(str) {
+      if (!str) return '';
+      return String(str).replace(/[^\x21-\x7E]/g, '').trim();
+    }
+
     function getTeacherStorageKey() {
       const teacherId = currentTeacher ? currentTeacher.id : 'guest';
       return `quizlive_math_questions_${teacherId}`;
@@ -1234,6 +1533,31 @@
       const savedTeacher = localStorage.getItem('quizlive_current_teacher');
       if (savedTeacher) {
         try { currentTeacher = JSON.parse(savedTeacher); } catch(e){ currentTeacher = null; }
+      }
+
+      // Sanitize stored AI Settings to prevent non-ISO code point errors
+      const savedApiKey = localStorage.getItem('quizlive_ai_api_key');
+      if (savedApiKey) {
+        const clean = cleanAscii(savedApiKey);
+        if (clean.length >= 15 && !/[\u0E00-\u0E7F]/.test(savedApiKey)) {
+          currentSystemSettings.apiKey = clean;
+        } else {
+          localStorage.removeItem('quizlive_ai_api_key');
+          currentSystemSettings.apiKey = cleanAscii(EMBEDDED_GEMINI_API_KEY);
+        }
+      } else {
+        currentSystemSettings.apiKey = cleanAscii(EMBEDDED_GEMINI_API_KEY);
+      }
+
+      const savedModel = localStorage.getItem('quizlive_ai_model');
+      if (savedModel) {
+        const cleanModel = cleanAscii(savedModel);
+        if (cleanModel && !/[\u0E00-\u0E7F]/.test(savedModel)) {
+          currentSystemSettings.aiModel = cleanModel;
+        } else {
+          localStorage.removeItem('quizlive_ai_model');
+          currentSystemSettings.aiModel = DEFAULT_AI_MODEL;
+        }
       }
 
       if (currentTeacher) {
@@ -1261,16 +1585,26 @@
       }
     }
 
-    function updateBackendStatusBadge() {
+    function setBackendBadgeStatus(status, text) {
       const badge = document.getElementById('backendStatusBadge');
-      if (badge) {
-        if (cloudBackendUrl) {
-          badge.innerText = '☁️ Cloudflare Worker Connected';
-          badge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono font-medium';
-        } else {
-          badge.innerText = '⚡ Local Storage';
-          badge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-mono font-medium';
-        }
+      if (!badge) return;
+      if (status === 'online') {
+        badge.innerText = text || '☁️ Cloud Connected';
+        badge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono font-medium';
+      } else if (status === 'error') {
+        badge.innerText = text || '⚠️ Cloud Disconnected';
+        badge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 font-mono font-medium';
+      } else {
+        badge.innerText = text || '⚡ Local Storage';
+        badge.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 font-mono font-medium';
+      }
+    }
+
+    function updateBackendStatusBadge() {
+      if (cloudBackendUrl) {
+        setBackendBadgeStatus('online', '☁️ Cloudflare Worker Connected');
+      } else {
+        setBackendBadgeStatus('local', '⚡ Local Storage');
       }
     }
 
@@ -1280,25 +1614,34 @@
         const cleanUrl = cloudBackendUrl.replace(/\/$/, '');
         const res = await fetch(`${cleanUrl}/api/questions?teacherId=${encodeURIComponent(currentTeacher.id)}&grade=ALL`);
         const data = await res.json();
-        if (data.success && data.questions) {
-          questions = data.questions;
-          saveLocalData();
+        if (data.success && Array.isArray(data.questions)) {
+          setBackendBadgeStatus('online', '☁️ Cloud Connected');
+          if (data.questions.length > 0) {
+            questions = data.questions;
+            saveLocalData();
+          } else if (questions.length > 0) {
+            // Cloud has 0 questions but local has questions -> Upload local to Cloud!
+            await syncQuestionsToCloud();
+          }
           populateTeacherGradeSelects();
           renderTeacherQuestionList();
           renderKPIStats();
           renderExamSetsGrid();
           renderTeachersManagementList();
+        } else {
+          setBackendBadgeStatus('error', '⚠️ Cloud API Error');
         }
       } catch (err) {
         console.warn('Could not sync from Cloud Backend, using local:', err);
+        setBackendBadgeStatus('error', '⚠️ Cloud Disconnected');
       }
     }
 
     async function syncQuestionsToCloud() {
-      if (!cloudBackendUrl || !currentTeacher) return;
+      if (!cloudBackendUrl || !currentTeacher) return { success: false, error: 'ไม่ได้ระบุ URL หลังบ้าน' };
       try {
         const cleanUrl = cloudBackendUrl.replace(/\/$/, '');
-        await fetch(`${cleanUrl}/api/questions`, {
+        const res = await fetch(`${cleanUrl}/api/questions`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1306,8 +1649,15 @@
             questions: questions
           })
         });
+        const data = await res.json();
+        if (data && data.success) {
+          setBackendBadgeStatus('online', '☁️ Cloud Connected');
+        }
+        return data;
       } catch (err) {
         console.warn('Could not save to Cloud Backend:', err);
+        setBackendBadgeStatus('error', '⚠️ Cloud Disconnected');
+        return { success: false, error: err.message };
       }
     }
 
@@ -1430,6 +1780,15 @@
         // Ensure regular teacher is always on 'sets' tab on initial load
         switchDashboardTab('sets');
       }
+
+      const adminAiBtn = document.getElementById('adminAiSettingsToolbarBtn');
+      if (adminAiBtn) {
+        if (isAdmin) adminAiBtn.classList.remove('hidden');
+        else adminAiBtn.classList.add('hidden');
+      }
+
+      fetchSystemSettingsFromCloud();
+      syncScoresFromCloud(false);
     }
 
     // ==========================================
@@ -1444,17 +1803,20 @@
       }
 
       const setsTab = document.getElementById('tabContentSets');
+      const scoresTab = document.getElementById('tabContentScores');
       const teachersTab = document.getElementById('tabContentTeachers');
       const questionsTab = document.getElementById('tabContentQuestions');
 
       const btnSets = document.getElementById('tabBtnSets');
+      const btnScores = document.getElementById('tabBtnScores');
       const btnTeachers = document.getElementById('tabBtnTeachers');
       const btnQuestions = document.getElementById('tabBtnQuestions');
 
-      if (!setsTab || !teachersTab || !questionsTab) return;
+      if (!setsTab || !scoresTab || !teachersTab || !questionsTab) return;
 
       // Hide all containers
       setsTab.classList.add('hidden');
+      scoresTab.classList.add('hidden');
       teachersTab.classList.add('hidden');
       questionsTab.classList.add('hidden');
 
@@ -1463,6 +1825,7 @@
       const activeBtnClass = 'flex-1 min-w-[130px] py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow-sm';
 
       btnSets.className = inactiveBtnClass;
+      if (btnScores) btnScores.className = inactiveBtnClass;
       btnTeachers.className = inactiveBtnClass;
       btnQuestions.className = inactiveBtnClass;
 
@@ -1470,6 +1833,10 @@
         setsTab.classList.remove('hidden');
         btnSets.className = activeBtnClass;
         renderExamSetsGrid();
+      } else if (tabName === 'scores') {
+        scoresTab.classList.remove('hidden');
+        if (btnScores) btnScores.className = activeBtnClass;
+        renderScoresList();
       } else if (tabName === 'teachers' && isAdmin) {
         teachersTab.classList.remove('hidden');
         btnTeachers.className = activeBtnClass;
@@ -1803,6 +2170,12 @@
       const bSets = document.getElementById('badgeSetsCount');
       if (bSets) bSets.innerText = examSets.length;
 
+      const bScores = document.getElementById('badgeScoresCount');
+      if (bScores) {
+        const teacherScores = getTeacherScores();
+        bScores.innerText = teacherScores.length;
+      }
+
       const bTeachers = document.getElementById('badgeTeachersCount');
       if (bTeachers) bTeachers.innerText = teachers.length + 1;
 
@@ -1886,6 +2259,9 @@
             <button onclick="quickOpenSetLive('${encodeURIComponent(s.name)}')" class="flex-1 py-2 px-3 rounded-xl ${s.info.btnClass} font-heading font-bold text-xs shadow-sm transition flex items-center justify-center gap-1.5">
               <span>🚀</span> เปิดสอบสด (Live)
             </button>
+            <button onclick="quickFilterSetScores('${encodeURIComponent(s.name)}')" class="p-2 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 text-xs font-bold transition" title="ดูผลคะแนนนักเรียนในชุดนี้">
+              <span>📊</span>
+            </button>
             <button onclick="quickFilterSetQuestions('${encodeURIComponent(s.name)}')" class="p-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold transition" title="ดูรายการข้อสอบในชุดนี้">
               <span>📝</span>
             </button>
@@ -1932,8 +2308,11 @@
           </div>
         </div>
 
-        <div class="flex items-center gap-2">
-          <span class="px-3 py-1.5 rounded-xl bg-white border border-blue-200 text-blue-800 text-xs font-bold shadow-xs">
+        <div class="flex items-center gap-2 flex-wrap">
+          <button onclick="openAdminAiSettingsModal()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-purple-200">
+            <span>🤖</span> ตั้งค่าโมเดล AI (Gemini)
+          </button>
+          <span class="px-3 py-2 rounded-xl bg-white border border-blue-200 text-blue-800 text-xs font-bold shadow-xs">
             🛡️ สิทธิ์ควบคุมสูงสุด
           </span>
         </div>
@@ -2019,6 +2398,396 @@
       const gradeInput = document.getElementById('qGradeInput');
       if (gradeInput) {
         gradeInput.value = setName;
+      }
+    }
+
+    function quickFilterSetScores(encodedSetName) {
+      const setName = decodeURIComponent(encodedSetName);
+      switchDashboardTab('scores');
+      const filterGrade = document.getElementById('scoreFilterGrade');
+      if (filterGrade) {
+        filterGrade.value = setName;
+        renderScoresList();
+      }
+    }
+
+    // ==========================================
+    // STUDENT SCORES MANAGEMENT (VIEW BY NO, ROOM, GRADE)
+    // ==========================================
+    function getTeacherScores() {
+      const allScores = JSON.parse(localStorage.getItem('quizlive_scores') || '[]');
+      if (!currentTeacher || currentTeacher.id === 'admin') {
+        return allScores;
+      }
+      return allScores.filter(s => !s.teacherId || s.teacherId === currentTeacher.id);
+    }
+
+    function populateScoreFilterDropdowns(scores) {
+      const gradeSelect = document.getElementById('scoreFilterGrade');
+      const roomSelect = document.getElementById('scoreFilterRoom');
+      if (!gradeSelect || !roomSelect) return;
+
+      const currentGradeVal = gradeSelect.value;
+      const currentRoomVal = roomSelect.value;
+
+      // Extract unique grades from scores and questions
+      const gradesSet = new Set();
+      scores.forEach(s => { if (s.grade && s.grade !== '-') gradesSet.add(s.grade); });
+      const myQList = (currentTeacher && currentTeacher.id === 'admin') ? getAllSystemQuestions() : questions;
+      myQList.forEach(q => { if (q.grade) gradesSet.add(q.grade); });
+
+      const sortedGrades = Array.from(gradesSet).sort((a, b) => a.localeCompare(b, 'th'));
+      gradeSelect.innerHTML = '<option value="ALL">ทั้งหมดทุกชุดวิชา</option>' +
+        sortedGrades.map(g => `<option value="${g}">${g}</option>`).join('');
+
+      if (sortedGrades.includes(currentGradeVal) || currentGradeVal === 'ALL') {
+        gradeSelect.value = currentGradeVal;
+      } else {
+        gradeSelect.value = 'ALL';
+      }
+
+      // Extract unique rooms from scores
+      const roomsSet = new Set();
+      scores.forEach(s => {
+        if (s.room && s.room !== '-' && s.room.trim() !== '') {
+          roomsSet.add(s.room.trim());
+        }
+      });
+      const sortedRooms = Array.from(roomsSet).sort((a, b) => {
+        return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+      });
+
+      roomSelect.innerHTML = '<option value="ALL">ทุกห้องเรียน</option>' +
+        sortedRooms.map(r => `<option value="${r}">ห้อง ${r}</option>`).join('');
+
+      if (sortedRooms.includes(currentRoomVal) || currentRoomVal === 'ALL') {
+        roomSelect.value = currentRoomVal;
+      } else {
+        roomSelect.value = 'ALL';
+      }
+    }
+
+    function renderScoresList() {
+      const tableBody = document.getElementById('scoresTableBody');
+      const emptyState = document.getElementById('scoresEmptyState');
+      if (!tableBody) return;
+
+      const scores = getTeacherScores();
+      populateScoreFilterDropdowns(scores);
+
+      const gradeFilter = document.getElementById('scoreFilterGrade') ? document.getElementById('scoreFilterGrade').value : 'ALL';
+      const roomFilter = document.getElementById('scoreFilterRoom') ? document.getElementById('scoreFilterRoom').value : 'ALL';
+      const sortBy = document.getElementById('scoreSortSelect') ? document.getElementById('scoreSortSelect').value : 'no-asc';
+      const searchQuery = document.getElementById('scoreSearchInput') ? document.getElementById('scoreSearchInput').value.trim().toLowerCase() : '';
+
+      // Filter scores
+      let filtered = scores.filter(s => {
+        if (gradeFilter !== 'ALL' && s.grade !== gradeFilter) return false;
+        if (roomFilter !== 'ALL' && s.room !== roomFilter) return false;
+        if (searchQuery) {
+          const nameMatch = (s.name || '').toLowerCase().includes(searchQuery);
+          const noMatch = String(s.no || '').includes(searchQuery);
+          const roomMatch = (s.room || '').toLowerCase().includes(searchQuery);
+          if (!nameMatch && !noMatch && !roomMatch) return false;
+        }
+        return true;
+      });
+
+      // Sort scores
+      filtered.sort((a, b) => {
+        if (sortBy === 'no-asc') {
+          const noA = parseInt(a.no) || 9999;
+          const noB = parseInt(b.no) || 9999;
+          if (noA !== noB) return noA - noB;
+          return (a.room || '').localeCompare(b.room || '', undefined, { numeric: true });
+        } else if (sortBy === 'no-desc') {
+          const noA = parseInt(a.no) || 0;
+          const noB = parseInt(b.no) || 0;
+          if (noA !== noB) return noB - noA;
+          return (b.room || '').localeCompare(a.room || '', undefined, { numeric: true });
+        } else if (sortBy === 'score-desc') {
+          const rateA = (a.total > 0) ? (a.score / a.total) : 0;
+          const rateB = (b.total > 0) ? (b.score / b.total) : 0;
+          if (rateB !== rateA) return rateB - rateA;
+          return (parseInt(a.no) || 0) - (parseInt(b.no) || 0);
+        } else if (sortBy === 'score-asc') {
+          const rateA = (a.total > 0) ? (a.score / a.total) : 0;
+          const rateB = (b.total > 0) ? (b.score / b.total) : 0;
+          if (rateA !== rateB) return rateA - rateB;
+          return (parseInt(a.no) || 0) - (parseInt(b.no) || 0);
+        } else if (sortBy === 'time-desc') {
+          return new Date(b.timestamp || 0) - new Date(a.timestamp || 0);
+        }
+        return 0;
+      });
+
+      // Update Summary KPI Cards
+      const totalStudentsEl = document.getElementById('scoreSummaryTotalStudents');
+      const avgEl = document.getElementById('scoreSummaryAvg');
+      const avgPercentEl = document.getElementById('scoreSummaryAvgPercent');
+      const maxEl = document.getElementById('scoreSummaryMax');
+      const minEl = document.getElementById('scoreSummaryMin');
+      const filteredCountEl = document.getElementById('scoreFilteredCount');
+      const badgeScoresCount = document.getElementById('badgeScoresCount');
+
+      if (badgeScoresCount) badgeScoresCount.innerText = scores.length;
+      if (filteredCountEl) filteredCountEl.innerText = filtered.length;
+
+      if (filtered.length === 0) {
+        if (totalStudentsEl) totalStudentsEl.innerText = '0';
+        if (avgEl) avgEl.innerText = '0';
+        if (avgPercentEl) avgPercentEl.innerText = '(-%)';
+        if (maxEl) maxEl.innerText = '0';
+        if (minEl) minEl.innerText = '0';
+
+        tableBody.innerHTML = '';
+        if (emptyState) emptyState.classList.remove('hidden');
+        return;
+      }
+
+      if (emptyState) emptyState.classList.add('hidden');
+
+      const totalStudents = filtered.length;
+      let sumScore = 0;
+      let sumTotal = 0;
+      let maxScore = -1;
+      let minScore = 99999;
+
+      filtered.forEach(s => {
+        const sc = Number(s.score) || 0;
+        const tot = Number(s.total) || 0;
+        sumScore += sc;
+        sumTotal += tot;
+        if (sc > maxScore) maxScore = sc;
+        if (sc < minScore) minScore = sc;
+      });
+
+      const avgScore = (sumScore / totalStudents).toFixed(1);
+      const avgPercent = sumTotal > 0 ? Math.round((sumScore / sumTotal) * 100) : 0;
+
+      if (totalStudentsEl) totalStudentsEl.innerText = totalStudents;
+      if (avgEl) avgEl.innerText = avgScore;
+      if (avgPercentEl) avgPercentEl.innerText = `(${avgPercent}%)`;
+      if (maxEl) maxEl.innerText = maxScore >= 0 ? maxScore : '0';
+      if (minEl) minEl.innerText = minScore !== 99999 ? minScore : '0';
+
+      // Render Table Rows
+      tableBody.innerHTML = filtered.map(s => {
+        const sc = Number(s.score) || 0;
+        const tot = Number(s.total) || 1;
+        const pct = Math.round((sc / tot) * 100);
+        const isPassed = pct >= 50;
+
+        const info = getSubjectInfo(s.grade);
+
+        let dateStr = '-';
+        if (s.timestamp) {
+          try {
+            const d = new Date(s.timestamp);
+            dateStr = d.toLocaleDateString('th-TH', {
+              day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit'
+            });
+          } catch(e){}
+        }
+
+        return `
+          <tr class="hover:bg-slate-50/80 transition group">
+            <td class="py-3.5 px-3 text-center">
+              <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-blue-50 text-blue-800 font-mono font-black text-xs border border-blue-200 shadow-2xs">
+                ${s.no || '-'}
+              </span>
+            </td>
+            <td class="py-3.5 px-3.5 font-bold text-slate-900">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center text-xs">🧑‍🎓</span>
+                <span>${s.name || 'นักเรียน'}</span>
+              </div>
+            </td>
+            <td class="py-3.5 px-3 text-center">
+              <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200">
+                ${s.room ? `ห้อง ${s.room}` : '-'}
+              </span>
+            </td>
+            <td class="py-3.5 px-3.5">
+              <span class="px-2.5 py-1 rounded-lg text-xs font-bold border ${info.badgeClass}">
+                ${info.icon} ${s.grade || 'ทั่วไป'}
+              </span>
+            </td>
+            <td class="py-3.5 px-3 text-center">
+              <div class="font-heading font-black text-sm text-slate-900">
+                ${sc} <span class="text-xs font-medium text-slate-400">/ ${tot}</span>
+              </div>
+              <div class="w-16 mx-auto bg-slate-200 rounded-full h-1.5 mt-1 overflow-hidden">
+                <div class="${isPassed ? 'bg-emerald-500' : 'bg-rose-500'} h-full rounded-full" style="width: ${pct}%"></div>
+              </div>
+            </td>
+            <td class="py-3.5 px-3 text-center">
+              <span class="font-mono font-bold text-xs ${isPassed ? 'text-emerald-700' : 'text-rose-700'}">
+                ${pct}%
+              </span>
+            </td>
+            <td class="py-3.5 px-3 text-center">
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${isPassed ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
+                ${isPassed ? '✓ ผ่าน' : '✗ ปรับปรุง'}
+              </span>
+            </td>
+            <td class="py-3.5 px-3 text-center hidden md:table-cell font-mono text-xs text-slate-500">
+              ${s.pin || '-'}
+            </td>
+            <td class="py-3.5 px-3 text-right hidden lg:table-cell text-xs text-slate-500">
+              ${dateStr}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function exportScoresToCsv() {
+      const scores = getTeacherScores();
+      const gradeFilter = document.getElementById('scoreFilterGrade') ? document.getElementById('scoreFilterGrade').value : 'ALL';
+      const roomFilter = document.getElementById('scoreFilterRoom') ? document.getElementById('scoreFilterRoom').value : 'ALL';
+      const sortBy = document.getElementById('scoreSortSelect') ? document.getElementById('scoreSortSelect').value : 'no-asc';
+      const searchQuery = document.getElementById('scoreSearchInput') ? document.getElementById('scoreSearchInput').value.trim().toLowerCase() : '';
+
+      let filtered = scores.filter(s => {
+        if (gradeFilter !== 'ALL' && s.grade !== gradeFilter) return false;
+        if (roomFilter !== 'ALL' && s.room !== roomFilter) return false;
+        if (searchQuery) {
+          const nameMatch = (s.name || '').toLowerCase().includes(searchQuery);
+          const noMatch = String(s.no || '').includes(searchQuery);
+          const roomMatch = (s.room || '').toLowerCase().includes(searchQuery);
+          if (!nameMatch && !noMatch && !roomMatch) return false;
+        }
+        return true;
+      });
+
+      filtered.sort((a, b) => {
+        if (sortBy === 'no-asc') {
+          return (parseInt(a.no) || 9999) - (parseInt(b.no) || 9999);
+        } else if (sortBy === 'no-desc') {
+          return (parseInt(b.no) || 0) - (parseInt(a.no) || 0);
+        } else if (sortBy === 'score-desc') {
+          return ((b.score / b.total) || 0) - ((a.score / a.total) || 0);
+        } else if (sortBy === 'score-asc') {
+          return ((a.score / a.total) || 0) - ((b.score / b.total) || 0);
+        } else if (sortBy === 'time-desc') {
+          return new Date(b.timestamp || 0) - new Date(a.timestamp || 0);
+        }
+        return 0;
+      });
+
+      if (filtered.length === 0) {
+        alert('ไม่พบข้อมูลคะแนนสำหรับส่งออก');
+        return;
+      }
+
+      let csvContent = '\uFEFF'; // UTF-8 BOM for Excel Thai language support
+      csvContent += 'เลขที่,ชื่อ-นามสกุล,ห้องเรียน,ชุดข้อสอบ/ระดับชั้น,คะแนนที่ได้,คะแนนเต็ม,ร้อยละ(%),ผลการประเมิน,รหัสห้องสอบ,วันเวลาที่ส่ง\n';
+
+      filtered.forEach(s => {
+        const sc = Number(s.score) || 0;
+        const tot = Number(s.total) || 1;
+        const pct = Math.round((sc / tot) * 100);
+        const evalStr = pct >= 50 ? 'ผ่าน' : 'ไม่ผ่าน';
+        const dateStr = s.timestamp ? new Date(s.timestamp).toLocaleString('th-TH') : '-';
+
+        const row = [
+          `"${s.no || ''}"`,
+          `"${(s.name || '').replace(/"/g, '""')}"`,
+          `"${s.room || ''}"`,
+          `"${(s.grade || '').replace(/"/g, '""')}"`,
+          sc,
+          tot,
+          pct,
+          evalStr,
+          `"${s.pin || ''}"`,
+          `"${dateStr}"`
+        ];
+        csvContent += row.join(',') + '\n';
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const filename = `ผลคะแนน_${(gradeFilter !== 'ALL' ? gradeFilter : 'ทั้งหมด')}_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    async function handleClearScores() {
+      const gradeFilter = document.getElementById('scoreFilterGrade') ? document.getElementById('scoreFilterGrade').value : 'ALL';
+      const roomFilter = document.getElementById('scoreFilterRoom') ? document.getElementById('scoreFilterRoom').value : 'ALL';
+      const promptMsg = (gradeFilter === 'ALL' && roomFilter === 'ALL')
+        ? 'คุณแน่ใจหรือไม่ว่าต้องการล้างคะแนนทั้งหมด?'
+        : `คุณแน่ใจหรือไม่ว่าต้องการล้างคะแนนของชุด "${gradeFilter}" ${roomFilter !== 'ALL' ? 'ห้อง ' + roomFilter : ''}?`;
+
+      if (!confirm(promptMsg)) return;
+
+      const teacherId = currentTeacher ? currentTeacher.id : 'default';
+      let allScores = JSON.parse(localStorage.getItem('quizlive_scores') || '[]');
+
+      allScores = allScores.filter(s => {
+        if (teacherId !== 'admin' && s.teacherId && s.teacherId !== teacherId) {
+          return true; // Keep other teachers' scores
+        }
+        if (gradeFilter !== 'ALL' && s.grade !== gradeFilter) return true;
+        if (roomFilter !== 'ALL' && s.room !== roomFilter) return true;
+        return false;
+      });
+
+      localStorage.setItem('quizlive_scores', JSON.stringify(allScores));
+
+      // Sync clear to Cloudflare Worker if connected
+      if (cloudBackendUrl) {
+        try {
+          const cleanUrl = cloudBackendUrl.replace(/\/$/, '');
+          await fetch(`${cleanUrl}/api/scores/clear`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              teacherId: teacherId,
+              grade: gradeFilter
+            })
+          });
+        } catch(e){}
+      }
+
+      renderScoresList();
+      renderKPIStats();
+      alert('ล้างคะแนนเรียบร้อยแล้ว');
+    }
+
+    async function syncScoresFromCloud(showNotification = false) {
+      if (!cloudBackendUrl || !currentTeacher) return;
+      try {
+        const cleanUrl = cloudBackendUrl.replace(/\/$/, '');
+        const teacherParam = (currentTeacher.id === 'admin') ? '' : `teacherId=${encodeURIComponent(currentTeacher.id)}`;
+        const res = await fetch(`${cleanUrl}/api/scores?${teacherParam}&pin=ALL`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.scores)) {
+          const localScores = JSON.parse(localStorage.getItem('quizlive_scores') || '[]');
+          const merged = [...data.scores];
+          localScores.forEach(ls => {
+            if (!merged.some(ms => ms.timestamp === ls.timestamp && ms.name === ls.name && ms.no === ls.no)) {
+              merged.push(ls);
+            }
+          });
+          localStorage.setItem('quizlive_scores', JSON.stringify(merged));
+          renderScoresList();
+          renderKPIStats();
+          if (showNotification) {
+            alert(`✅ รีเฟรชคะแนนสดเรียบร้อยแล้ว! พบข้อมูล ${data.scores.length} รายการ`);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not sync scores from Cloud:', err);
+        if (showNotification) {
+          alert('ไม่สามารถเชื่อมต่อดึงคะแนนจากเซิร์ฟเวอร์ได้: ' + err.message);
+        }
       }
     }
 
@@ -2722,6 +3491,26 @@
       document.getElementById('resultScoreText').innerText = `${correctCount} / ${total}`;
       document.getElementById('resultPercentageText').innerText = `ความแม่นยำ ${percent}%`;
 
+      // Prepare Result Object
+      const resultObj = {
+        pin: currentStudent.pin || '-',
+        teacherId: currentStudent.teacherId || '',
+        grade: currentStudent.grade || '-',
+        room: currentStudent.room || '-',
+        no: currentStudent.no || '-',
+        name: currentStudent.name || 'นักเรียน',
+        score: correctCount,
+        total: total,
+        timestamp: new Date().toISOString()
+      };
+
+      // Save locally to localStorage
+      try {
+        const localScores = JSON.parse(localStorage.getItem('quizlive_scores') || '[]');
+        localScores.unshift(resultObj);
+        localStorage.setItem('quizlive_scores', JSON.stringify(localScores));
+      } catch(e){}
+
       // Submit Score to Cloudflare Worker Backend
       if (cloudBackendUrl) {
         try {
@@ -2729,18 +3518,7 @@
           fetch(`${cleanUrl}/api/submit`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              result: {
-                pin: currentStudent.pin || '-',
-                teacherId: currentStudent.teacherId || '',
-                grade: currentStudent.grade || '-',
-                room: currentStudent.room || '-',
-                no: currentStudent.no || '-',
-                name: currentStudent.name || 'นักเรียน',
-                score: correctCount,
-                total: total
-              }
-            })
+            body: JSON.stringify({ result: resultObj })
           });
         } catch(e){}
       }
@@ -3300,24 +4078,45 @@
     }
 
     async function callGeminiApi(payload) {
-      const apiKey = (EMBEDDED_GEMINI_API_KEY || '').trim();
-      const models = [
-        'gemini-3.6-flash',
-        'gemini-3.5-flash-lite',
-        'gemini-3.1-pro',
+      const activeModel = cleanAscii(currentSystemSettings.aiModel || 'gemini-2.5-flash');
+      const fallbackModel = cleanAscii(currentSystemSettings.aiFallbackModel || 'gemini-1.5-flash');
+      const rawApiKey = currentSystemSettings.apiKey || EMBEDDED_GEMINI_API_KEY || '';
+      let apiKey = cleanAscii(rawApiKey);
+      if (!apiKey || apiKey.length < 15) {
+        apiKey = cleanAscii(EMBEDDED_GEMINI_API_KEY);
+      }
+
+      // Dynamic model priority: activeModel first, then fallbackModel, then known stable models without duplicates
+      const models = Array.from(new Set([
+        activeModel,
+        fallbackModel,
         'gemini-2.5-flash',
         'gemini-2.0-flash',
-        'gemini-1.5-flash'
-      ];
+        'gemini-1.5-flash',
+        'gemini-2.5-flash-lite',
+        'gemini-3.6-flash',
+        'gemini-3.5-flash-lite',
+        'gemini-3.1-pro'
+      ])).filter(Boolean);
+
+      const isOAuth = apiKey.startsWith('ya29.');
       let lastError = null;
 
       // 1. Direct call to Google Generative Language API
       for (const model of models) {
         try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+          let url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+          const reqHeaders = { 'Content-Type': 'application/json' };
+
+          if (isOAuth) {
+            reqHeaders['Authorization'] = `Bearer ${apiKey}`;
+          } else {
+            url += `?key=${encodeURIComponent(apiKey)}`;
+          }
+
           let response = await fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: reqHeaders,
             body: JSON.stringify(payload)
           });
 
@@ -3326,7 +4125,7 @@
             delete fallbackPayload.generationConfig.responseMimeType;
             response = await fetch(url, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: reqHeaders,
               body: JSON.stringify(fallbackPayload)
             });
           }
@@ -3359,7 +4158,7 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               apiKey: apiKey,
-              model: 'gemini-1.5-flash',
+              model: activeModel,
               payload: payload
             })
           });
@@ -3413,15 +4212,15 @@ ${pdfOrText.substring(0, 15000)}
 1. สกัดโจทย์ "ทุกข้อ" ที่พบ ห้ามข้ามหรือตัดทอน
 2. แปลงสูตร สมการ และสัญลักษณ์ทางคณิตศาสตร์/วิทยาศาสตร์ ทั้งหมดให้อยู่ในรูป LaTeX KaTeX โดยครอบด้วย $ เช่น $x^2 + 5x = 0$, $\\frac{a}{b}$, $\\sqrt{144}$, $\\pm$, $\\pi$
 3. สกัดตัวเลือกทั้ง 4 ข้อให้ครบ (ก, ข, ค, ง หรือ 1, 2, 3, 4)
-4. กำหนดเฉลย correctIndex เป็นตัวเลข 0, 1, 2, 3 (0=ก, 1=ข, 2=ค, 3=ง)
-5. คำอธิบายวิธีคิด (explanation) สั้นๆ
+4. วิเคราะห์คำตอบที่ถูกต้อง แล้วกำหนด correctIndex เป็นตัวเลข 0, 1, 2, 3 (0=ก, 1=ข, 2=ค, 3=ง) ว่าตอบข้อไหน
+5. ไม่ต้องเขียนคำอธิบายเฉลย/วิธีคิด ให้กำหนด "explanation": "" (เว้นว่างไว้) เพื่อความรวดเร็วในการประมวลผลสูงสุด วิเคราะห์ระบุแค่ correctIndex พอ
 6. ตอบกลับเป็น JSON Array เท่านั้น (ห้ามมีคำบรรยายอื่นนอกเหนือจาก JSON) ในรูปแบบ:
 [
   {
     "question": "ข้อความโจทย์พร้อมสูตร LaTeX",
     "choices": ["ตัวเลือก ก", "ตัวเลือก ข", "ตัวเลือก ค", "ตัวเลือก ง"],
     "correctIndex": 0,
-    "explanation": "คำอธิบายวิธีคิด",
+    "explanation": "",
     "grade": "${grade}"
   }
 ]`;
@@ -3446,15 +4245,15 @@ ${pdfOrText.substring(0, 15000)}
 1. อ่านและสกัดข้อสอบ "ทุกข้อ" ในรูปภาพ (เช่น หากมี 4 ข้อ ต้องสกัดให้ครบทั้ง 4 ข้อ ห้ามส่งมาแค่ข้อเดียว)
 2. สกัดสูตร สมการ และสัญลักษณ์คณิตศาสตร์ทั้งหมด แปลงเป็น LaTeX KaTeX ครอบด้วย $ เช่น $x^2 + 4$, $\\frac{2}{3}$, $\\sqrt{x}$, $\\times$, $\\div$
 3. สกัดตัวเลือกทั้ง 4 ข้อ (ก, ข, ค, ง หรือ A, B, C, D หรือ 1, 2, 3, 4)
-4. ตรวจดูเฉลยในภาพ (หากมีการวงกลม กากบาท ไฮไลท์ หรือเฉลยท้ายข้อ) หรือวิเคราะห์หาคำตอบที่ถูกต้องที่สุด กำหนด correctIndex เป็นตัวเลข 0 ถึง 3 (0=ก, 1=ข, 2=ค, 3=ง)
-5. ระบุคำอธิบายวิธีคิดสั้นๆ (explanation)
+4. ตรวจดูเฉลยในภาพ (หากมีการวงกลม กากบาท ไฮไลท์ หรือเฉลยท้ายข้อ) หรือวิเคราะห์หาคำตอบที่ถูกต้อง กำหนด correctIndex เป็นตัวเลข 0 ถึง 3 (0=ก, 1=ข, 2=ค, 3=ง) ว่าตอบข้อไหน
+5. ไม่ต้องเขียนคำอธิบายเฉลย/วิธีคิด ให้กำหนด "explanation": "" (เว้นว่างไว้) เพื่อความรวดเร็วในการประมวลผลสูงสุด วิเคราะห์ระบุแค่ว่าตอบข้อไหนใน correctIndex พอ
 6. ตอบกลับเป็น JSON Array เท่านั้น (ห้ามมีข้อความอื่นนอก JSON) ในรูปแบบ:
 [
   {
     "question": "ข้อความโจทย์พร้อมสูตร LaTeX",
     "choices": ["ตัวเลือก ก", "ตัวเลือก ข", "ตัวเลือก ค", "ตัวเลือก ง"],
     "correctIndex": 0,
-    "explanation": "คำอธิบายวิธีคิด",
+    "explanation": "",
     "grade": "${grade}"
   }
 ]`;
@@ -3592,14 +4391,18 @@ ${pdfOrText.substring(0, 15000)}
       });
 
       saveLocalData();
-      await syncQuestionsToCloud();
+      const cloudRes = await syncQuestionsToCloud();
       populateTeacherGradeSelects();
       renderTeacherQuestionList();
       renderKPIStats();
       renderExamSetsGrid();
       renderTeachersManagementList();
       closeAiUploadModal();
-      alert(`🎉 บันทึกข้อสอบนำเข้า ${extractedQuestionsBuffer.length} ข้อ เข้าสู่ชุด "${targetGrade}" เรียบร้อยแล้ว!`);
+      if (cloudRes && cloudRes.success) {
+        alert(`🎉 บันทึกข้อสอบนำเข้า ${extractedQuestionsBuffer.length} ข้อ เข้าสู่ชุด "${targetGrade}" และซิงค์ขึ้นหลังบ้าน Cloudflare เรียบร้อยแล้ว!`);
+      } else {
+        alert(`⚠️ บันทึกข้อสอบ ${extractedQuestionsBuffer.length} ข้อในเครื่องสำเร็จแล้ว แต่หลังบ้าน Cloudflare ยังไม่ตอบรับ: ${cloudRes ? (cloudRes.error || 'โปรดตรวจสอบ KV และ URL หลังบ้าน') : 'เชื่อมต่อไม่ได้'}`);
+      }
     }
 
     // Aliases for backward compatibility
@@ -3607,6 +4410,241 @@ ${pdfOrText.substring(0, 15000)}
     function closePdfImportModal() { closeAiUploadModal(); }
     function openTextImportModal() { openAiUploadModal('excel'); }
     function closeTextImportModal() { closeAiUploadModal(); }
+
+    // ==========================================
+    // ADMIN AI MODEL & SETTINGS MANAGEMENT
+    // ==========================================
+    function openAdminAiSettingsModal() {
+      const isAdmin = (currentTeacher && currentTeacher.id === 'admin');
+      if (!isAdmin) {
+        alert('เฉพาะผู้ดูแลระบบ (Admin) เท่านั้นที่สามารถตั้งค่าโมเดล AI ได้');
+        return;
+      }
+
+      document.getElementById('adminAiModelInput').value = currentSystemSettings.aiModel || 'gemini-2.5-flash';
+      document.getElementById('adminAiFallbackModelInput').value = currentSystemSettings.aiFallbackModel || 'gemini-1.5-flash';
+      document.getElementById('adminAiApiKeyInput').value = currentSystemSettings.apiKey || EMBEDDED_GEMINI_API_KEY;
+
+      const resultBox = document.getElementById('adminAiTestResultBox');
+      if (resultBox) resultBox.classList.add('hidden');
+
+      document.getElementById('adminAiSettingsModal').classList.remove('hidden');
+      document.getElementById('adminAiSettingsModal').classList.add('flex');
+    }
+
+    function closeAdminAiSettingsModal() {
+      document.getElementById('adminAiSettingsModal').classList.add('hidden');
+      document.getElementById('adminAiSettingsModal').classList.remove('flex');
+    }
+
+    function selectQuickAiModel(modelName) {
+      const input = document.getElementById('adminAiModelInput');
+      if (input) {
+        input.value = modelName;
+        input.focus();
+      }
+    }
+
+    function toggleAiApiKeyVisibility() {
+      const input = document.getElementById('adminAiApiKeyInput');
+      const text = document.getElementById('toggleAiKeyText');
+      if (!input || !text) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        text.innerText = '🙈 ซ่อนคีย์';
+      } else {
+        input.type = 'password';
+        text.innerText = '👁️ แสดงคีย์';
+      }
+    }
+
+    async function testAdminAiConnection() {
+      const model = cleanAscii(document.getElementById('adminAiModelInput').value) || 'gemini-2.5-flash';
+      let rawKey = document.getElementById('adminAiApiKeyInput').value;
+      let apiKey = cleanAscii(rawKey);
+      if (!apiKey || apiKey.length < 15) {
+        apiKey = cleanAscii(EMBEDDED_GEMINI_API_KEY);
+      }
+
+      const resultBox = document.getElementById('adminAiTestResultBox');
+      const statusEl = document.getElementById('adminAiTestStatus');
+      const detailEl = document.getElementById('adminAiTestDetail');
+      const testBtn = document.getElementById('adminAiTestBtn');
+
+      if (!resultBox || !statusEl || !detailEl) return;
+
+      resultBox.classList.remove('hidden');
+      resultBox.className = 'p-3.5 rounded-2xl text-xs space-y-1 bg-blue-50 border border-blue-200 text-blue-900 transition-all';
+      statusEl.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></span> กำลังทดสอบส่งคำขอไปยังโมเดล ' + model + '...';
+      detailEl.innerText = 'กำลังเชื่อมต่อ Google Generative Language API...';
+      if (testBtn) testBtn.disabled = true;
+
+      const startTime = Date.now();
+      const testPayload = {
+        contents: [{ parts: [{ text: 'ทักทายสั้นๆ 1 คำว่า "สวัสดี"' }] }],
+        generationConfig: { maxOutputTokens: 15, temperature: 0.1 }
+      };
+
+      try {
+        const isOAuth = apiKey.startsWith('ya29.');
+        let url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+        const headers = { 'Content-Type': 'application/json' };
+        if (isOAuth) {
+          headers['Authorization'] = `Bearer ${apiKey}`;
+        } else {
+          url += `?key=${encodeURIComponent(apiKey)}`;
+        }
+
+        let res = await fetch(url, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(testPayload)
+        });
+
+        // Fallback to Worker Proxy if direct call has issues
+        if (!res.ok && cloudBackendUrl) {
+          try {
+            const workerUrl = `${cloudBackendUrl.replace(/\/+$/, '')}/api/ai`;
+            const wRes = await fetch(workerUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ apiKey, model, payload: testPayload })
+            });
+            if (wRes.ok) {
+              res = wRes;
+            }
+          } catch(e){}
+        }
+
+        const elapsed = Date.now() - startTime;
+        const resData = await res.json();
+
+        if (res.ok && (resData.candidates || (resData.data && resData.data.candidates))) {
+          const candidates = resData.candidates || resData.data.candidates;
+          const replyText = (candidates[0] && candidates[0].content && candidates[0].content.parts[0]) 
+            ? candidates[0].content.parts[0].text.trim() 
+            : 'OK';
+
+          resultBox.className = 'p-3.5 rounded-2xl text-xs space-y-1 bg-emerald-50 border border-emerald-200 text-emerald-900 transition-all';
+          statusEl.innerHTML = `<span>✅</span> <b>โมเดล "${model}" เชื่อมต่อสำเร็จ!</b> (ใช้เวลา ${elapsed} ms)`;
+          detailEl.innerHTML = `💬 AI ตอบกลับ: "<b>${replyText}</b>"<br><span class="text-emerald-700 font-bold">✓ พร้อมใช้งานในการสกัดข้อสอบจากภาพ PDF และ OCR ทันที</span>`;
+        } else {
+          const errMsg = resData.error ? (resData.error.message || JSON.stringify(resData.error)) : (resData.error || `HTTP Status ${res.status}`);
+          resultBox.className = 'p-3.5 rounded-2xl text-xs space-y-1 bg-rose-50 border border-rose-200 text-rose-900 transition-all';
+          statusEl.innerHTML = `<span>❌</span> <b>โมเดล "${model}" ตอบกลับผิดพลาด</b> (${elapsed} ms)`;
+          detailEl.innerText = errMsg;
+        }
+      } catch (err) {
+        const elapsed = Date.now() - startTime;
+        resultBox.className = 'p-3.5 rounded-2xl text-xs space-y-1 bg-rose-50 border border-rose-200 text-rose-900 transition-all';
+        statusEl.innerHTML = `<span>❌</span> <b>การเชื่อมต่อล้มเหลว</b> (${elapsed} ms)`;
+        detailEl.innerText = err.message || 'โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ตหรือชื่อโมเดล';
+      } finally {
+        if (testBtn) testBtn.disabled = false;
+      }
+    }
+
+    async function saveAdminAiSettings() {
+      const newModel = cleanAscii(document.getElementById('adminAiModelInput').value) || 'gemini-2.5-flash';
+      const newFallback = cleanAscii(document.getElementById('adminAiFallbackModelInput').value) || 'gemini-1.5-flash';
+      let rawKey = document.getElementById('adminAiApiKeyInput').value;
+      let newApiKey = cleanAscii(rawKey);
+      if (!newApiKey || newApiKey.length < 15) {
+        newApiKey = cleanAscii(EMBEDDED_GEMINI_API_KEY);
+      }
+
+      currentSystemSettings.aiModel = newModel;
+      currentSystemSettings.aiFallbackModel = newFallback;
+      currentSystemSettings.apiKey = newApiKey;
+
+      localStorage.setItem('quizlive_ai_model', newModel);
+      localStorage.setItem('quizlive_ai_fallback_model', newFallback);
+      localStorage.setItem('quizlive_ai_api_key', newApiKey);
+
+      const saveBtn = document.getElementById('adminAiSaveBtn');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<span>⏳ กำลังบันทึกไปที่หลังบ้าน...</span>';
+      }
+
+      let cloudSuccess = false;
+      let cloudError = '';
+
+      if (cloudBackendUrl) {
+        try {
+          const cleanUrl = cloudBackendUrl.replace(/\/+$/, '');
+          const res = await fetch(`${cleanUrl}/api/settings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              settings: {
+                aiModel: newModel,
+                aiFallbackModel: newFallback,
+                apiKey: newApiKey,
+                updatedAt: new Date().toISOString()
+              }
+            })
+          });
+          const data = await res.json();
+          if (data.success) {
+            cloudSuccess = true;
+          } else {
+            cloudError = data.error || 'Server error';
+          }
+        } catch (err) {
+          cloudError = err.message;
+        }
+      }
+
+      if (saveBtn) {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<span>💾 บันทึกไปที่หลังบ้าน (Cloudflare KV)</span>';
+      }
+
+      closeAdminAiSettingsModal();
+
+      if (cloudSuccess) {
+        alert(`🎉 บันทึกการตั้งค่าโมเดล AI "${newModel}" ไปที่หลังบ้าน Cloudflare KV เรียบร้อยแล้ว!\n\nต่อไปเมื่อมีการสกัดข้อสอบด้วย AI ระบบจะใช้โมเดลนี้ทันทีบนทุกเครื่อง`);
+      } else if (cloudBackendUrl) {
+        alert(`⚠️ บันทึกในเบราว์เซอร์แล้ว แต่ส่งไปหลังบ้าน Cloudflare ไม่สำเร็จ (${cloudError})\nโปรดตรวจสอบสถานะการเชื่อมต่อหลังบ้าน`);
+      } else {
+        alert(`💾 บันทึกการตั้งค่าโมเดล AI "${newModel}" ในเบราว์เซอร์เรียบร้อยแล้ว`);
+      }
+    }
+
+    async function fetchSystemSettingsFromCloud() {
+      if (!cloudBackendUrl) return;
+      try {
+        const cleanUrl = cloudBackendUrl.replace(/\/+$/, '');
+        const res = await fetch(`${cleanUrl}/api/settings`);
+        const data = await res.json();
+        if (data.success && data.settings) {
+          if (data.settings.aiModel) {
+            const cleanM = cleanAscii(data.settings.aiModel);
+            if (cleanM) {
+              currentSystemSettings.aiModel = cleanM;
+              localStorage.setItem('quizlive_ai_model', cleanM);
+            }
+          }
+          if (data.settings.aiFallbackModel) {
+            const cleanFb = cleanAscii(data.settings.aiFallbackModel);
+            if (cleanFb) {
+              currentSystemSettings.aiFallbackModel = cleanFb;
+              localStorage.setItem('quizlive_ai_fallback_model', cleanFb);
+            }
+          }
+          if (data.settings.apiKey) {
+            const cleanK = cleanAscii(data.settings.apiKey);
+            if (cleanK && cleanK.length >= 15) {
+              currentSystemSettings.apiKey = cleanK;
+              localStorage.setItem('quizlive_ai_api_key', cleanK);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Could not sync system settings from cloud:', err);
+      }
+    }
   </script>
 </body>
 </html>
