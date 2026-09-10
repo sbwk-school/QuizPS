@@ -913,26 +913,26 @@
           <div class="space-y-1 pt-1">
             <span class="text-[11px] font-bold text-slate-600">กดเลือกโมเดลด่วน (Quick Select):</span>
             <div class="flex flex-wrap gap-1.5">
+              <button type="button" onclick="selectQuickAiModel('gemini-3.5-flash-lite')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-200 text-indigo-900 text-xs font-semibold shadow-2xs transition">
+                ⚡ gemini-3.5-flash-lite <span class="text-[10px] text-emerald-600 font-bold">(เร็วที่สุด)</span>
+              </button>
+              <button type="button" onclick="selectQuickAiModel('gemini-3.6-flash')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-200 text-indigo-900 text-xs font-semibold shadow-2xs transition">
+                ✨ gemini-3.6-flash <span class="text-[10px] text-indigo-600 font-bold">(ใหม่ รอบด้าน)</span>
+              </button>
+              <button type="button" onclick="selectQuickAiModel('gemini-3.1-pro')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-purple-100 border border-purple-200 text-purple-900 text-xs font-semibold shadow-2xs transition">
+                💎 gemini-3.1-pro <span class="text-[10px] text-purple-600 font-bold">(เหตุผลขั้นสูง)</span>
+              </button>
               <button type="button" onclick="selectQuickAiModel('gemini-2.5-flash')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-blue-100 border border-blue-200 text-blue-800 text-xs font-semibold shadow-2xs transition">
-                ⚡ gemini-2.5-flash <span class="text-[10px] text-emerald-600 font-bold">(แนะนำ)</span>
+                🚀 gemini-2.5-flash
               </button>
               <button type="button" onclick="selectQuickAiModel('gemini-2.5-flash-lite')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-blue-100 border border-blue-200 text-blue-800 text-xs font-semibold shadow-2xs transition">
                 💨 gemini-2.5-flash-lite
               </button>
-              <button type="button" onclick="selectQuickAiModel('gemini-1.5-flash')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-blue-100 border border-blue-200 text-blue-800 text-xs font-semibold shadow-2xs transition">
-                🏛️ gemini-1.5-flash
-              </button>
               <button type="button" onclick="selectQuickAiModel('gemini-2.0-flash')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-blue-100 border border-blue-200 text-blue-800 text-xs font-semibold shadow-2xs transition">
-                🚀 gemini-2.0-flash
+                🏛️ gemini-2.0-flash
               </button>
-              <button type="button" onclick="selectQuickAiModel('gemini-3.5-flash-lite')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-200 text-indigo-800 text-xs font-semibold shadow-2xs transition">
-                ✨ gemini-3.5-flash-lite
-              </button>
-              <button type="button" onclick="selectQuickAiModel('gemini-3.6-flash')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-200 text-indigo-800 text-xs font-semibold shadow-2xs transition">
-                ✨ gemini-3.6-flash
-              </button>
-              <button type="button" onclick="selectQuickAiModel('gemini-3.1-pro')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-indigo-100 border border-indigo-200 text-indigo-800 text-xs font-semibold shadow-2xs transition">
-                💎 gemini-3.1-pro
+              <button type="button" onclick="selectQuickAiModel('gemini-1.5-flash')" class="px-2.5 py-1 rounded-lg bg-white hover:bg-blue-100 border border-blue-200 text-blue-800 text-xs font-semibold shadow-2xs transition">
+                📄 gemini-1.5-flash
               </button>
             </div>
           </div>
@@ -951,18 +951,23 @@
         <div class="space-y-1.5">
           <div class="flex items-center justify-between">
             <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-              <span>🔑</span> Google Gemini API Key / OAuth Token:
+              <span>🔑</span> Google Gemini API Key:
             </label>
             <button type="button" onclick="toggleAiApiKeyVisibility()" class="text-[11px] text-blue-600 hover:underline font-semibold" id="toggleAiKeyText">
               👁️ แสดงคีย์
             </button>
           </div>
           <div class="relative">
-            <input type="password" id="adminAiApiKeyInput" placeholder="AIzaSy... or AQ...." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:bg-white focus:border-blue-600 transition pr-10">
+            <input type="password" id="adminAiApiKeyInput" placeholder="AIzaSy..." class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:bg-white focus:border-blue-600 transition pr-10">
           </div>
-          <p class="text-[11px] text-slate-500">
-            💡 รองรับทั้ง <b>API Key</b> จาก Google AI Studio (<code class="bg-slate-100 px-1 py-0.5 rounded text-slate-700 font-mono">AIzaSy...</code>) และ <b>OAuth2 Token</b> (<code class="bg-slate-100 px-1 py-0.5 rounded text-slate-700 font-mono">AQ...</code>) ระบบจะแปลง Header ส่งให้อัตโนมัติ
-          </p>
+          <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 space-y-1 text-[11px] text-amber-900">
+            <div class="font-bold flex items-center gap-1">
+              <span>💡</span> แนะนำใช้ Google Gemini API Key ถาวร (ขึ้นต้นด้วย AIzaSy...):
+            </div>
+            <div>
+              กดขอคีย์ฟรีได้ทันทีที่: <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="font-bold text-blue-700 underline hover:text-blue-900">Google AI Studio (aistudio.google.com) ↗</a> แล้วนำคีย์มาวางในช่องนี้
+            </div>
+          </div>
         </div>
 
         <!-- Test Connection Result Box -->
@@ -982,7 +987,7 @@
               ปิด
             </button>
             <button type="button" onclick="saveAdminAiSettings()" id="adminAiSaveBtn" class="flex-1 sm:flex-initial px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 font-heading font-black text-xs sm:text-sm text-white shadow-md shadow-blue-200 active:scale-[0.98] transition flex items-center justify-center gap-1.5">
-              <span>💾</span> บันทึกไปที่หลังบ้าน (Cloudflare KV)
+              <span>💾</span> บันทึกไปที่หลังบ้าน (Cloudflare D1)
             </button>
           </div>
         </div>
@@ -1454,17 +1459,17 @@
   <!-- JAVASCRIPT APPLICATION CORE LOGIC                       -->
   <!-- ======================================================= -->
   <script>
-    // Embedded API Key & Cloudflare Backend
-    const EMBEDDED_GEMINI_API_KEY = 'AQ.Ab8RN6KkcvPXRhcrmUQGPD4OV__HpKA1Eg4dxnQj8K3U_bSaZw';
+    // Cloudflare Backend (key ถูกเก็บใน Cloudflare D1/KV — ไม่ embed ในโค้ด)
+    const EMBEDDED_GEMINI_API_KEY = ''; // ไม่เก็บ key ในโค้ด — ปลอดภัย
     const DEFAULT_CLOUDFLARE_BACKEND = 'https://quizlive-math-api.phubet-hppk.workers.dev';
     const DEFAULT_AI_MODEL = 'gemini-2.5-flash';
     const DEFAULT_AI_FALLBACK_MODEL = 'gemini-1.5-flash';
 
-    // System AI Model Settings State (Dynamic & Stored in KV)
+    // System AI Model Settings (โหลดจาก Cloudflare D1 ผ่าน syncSettingsFromCloud)
     let currentSystemSettings = {
-      aiModel: localStorage.getItem('quizlive_ai_model') || DEFAULT_AI_MODEL,
-      aiFallbackModel: localStorage.getItem('quizlive_ai_fallback_model') || DEFAULT_AI_FALLBACK_MODEL,
-      apiKey: localStorage.getItem('quizlive_ai_api_key') || EMBEDDED_GEMINI_API_KEY
+      aiModel: DEFAULT_AI_MODEL,
+      aiFallbackModel: DEFAULT_AI_FALLBACK_MODEL,
+      apiKey: '' // key จะโหลดจาก backend เท่านั้น
     };
 
     // Empty start: No mock/test questions
@@ -1498,9 +1503,6 @@
       loadLocalData();
       updateBackendStatusBadge();
       
-      // Sync dynamic AI Model & Settings from Cloudflare KV
-      fetchSystemSettingsFromCloud();
-      
       const urlParams = new URLSearchParams(window.location.search);
       const roomParam = urlParams.get('room');
       const gradeParam = urlParams.get('grade');
@@ -1510,10 +1512,18 @@
       } else if (currentTeacher) {
         showTeacherDashboard();
         if (cloudBackendUrl) {
-          await syncQuestionsFromCloud();
+          await Promise.all([
+            fetchSystemSettingsFromCloud(),
+            syncTeachersFromCloud(),
+            syncQuestionsFromCloud(),
+            syncScoresFromCloud(false)
+          ]);
         }
       } else {
         showTeacherAuthView();
+        if (cloudBackendUrl) {
+          await syncTeachersFromCloud();
+        }
       }
 
       renderMath();
@@ -1608,21 +1618,38 @@
       }
     }
 
+    async function syncTeachersFromCloud() {
+      if (!cloudBackendUrl) return;
+      try {
+        const cleanUrl = cloudBackendUrl.replace(/\/$/, '');
+        const res = await fetch(`${cleanUrl}/api/teachers`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.success && Array.isArray(data.teachers)) {
+          localStorage.setItem('quizlive_registered_teachers', JSON.stringify(data.teachers));
+
+          if (currentTeacher && currentTeacher.id === 'admin') {
+            renderTeachersManagementList();
+            renderKPIStats();
+            renderExamSetsGrid();
+          }
+        }
+      } catch (err) {
+        console.warn('Could not sync teachers from Cloud:', err);
+      }
+    }
+
     async function syncQuestionsFromCloud() {
       if (!cloudBackendUrl || !currentTeacher) return;
       try {
         const cleanUrl = cloudBackendUrl.replace(/\/$/, '');
-        const res = await fetch(`${cleanUrl}/api/questions?teacherId=${encodeURIComponent(currentTeacher.id)}&grade=ALL`);
+        const targetTeacherId = (currentTeacher.id === 'admin') ? 'ALL' : currentTeacher.id;
+        const res = await fetch(`${cleanUrl}/api/questions?teacherId=${encodeURIComponent(targetTeacherId)}&grade=ALL`);
         const data = await res.json();
         if (data.success && Array.isArray(data.questions)) {
           setBackendBadgeStatus('online', '☁️ Cloud Connected');
-          if (data.questions.length > 0) {
-            questions = data.questions;
-            saveLocalData();
-          } else if (questions.length > 0) {
-            // Cloud has 0 questions but local has questions -> Upload local to Cloud!
-            await syncQuestionsToCloud();
-          }
+          questions = data.questions;
+          saveLocalData();
           populateTeacherGradeSelects();
           renderTeacherQuestionList();
           renderKPIStats();
@@ -1697,6 +1724,7 @@
 
     function showTeacherAuthView() {
       hideAllViews();
+      syncTeachersFromCloud();
       document.getElementById('teacherAuthView').classList.remove('hidden');
       const heroWelcome = document.getElementById('heroWelcomeBox');
       if (heroWelcome) heroWelcome.classList.remove('hidden');
@@ -1788,6 +1816,8 @@
       }
 
       fetchSystemSettingsFromCloud();
+      syncTeachersFromCloud();
+      syncQuestionsFromCloud();
       syncScoresFromCloud(false);
     }
 
@@ -2024,35 +2054,7 @@
     }
 
     function getAllSystemQuestions() {
-      if (currentTeacher && currentTeacher.id === 'admin') {
-        const teachers = getAllRegisteredTeachers();
-        let allQ = [];
-        const adminKey = 'quizlive_math_questions_admin';
-        const adminQ = JSON.parse(localStorage.getItem(adminKey) || '[]');
-        allQ = allQ.concat(adminQ);
-        
-        teachers.forEach(t => {
-          const tKey = `quizlive_math_questions_${t.id}`;
-          const tQ = JSON.parse(localStorage.getItem(tKey) || '[]');
-          tQ.forEach(q => {
-            if (!allQ.some(x => x.id === q.id)) {
-              allQ.push(q);
-            }
-          });
-        });
-
-        if (questions && questions.length > 0) {
-          questions.forEach(q => {
-            if (!allQ.some(x => x.id === q.id)) {
-              allQ.push(q);
-            }
-          });
-        }
-        return allQ;
-      } else {
-        // Regular Teacher only sees their own questions
-        return questions || [];
-      }
+      return questions || [];
     }
 
     function computeExamSets(qList) {
@@ -2769,14 +2771,7 @@
         const res = await fetch(`${cleanUrl}/api/scores?${teacherParam}&pin=ALL`);
         const data = await res.json();
         if (data.success && Array.isArray(data.scores)) {
-          const localScores = JSON.parse(localStorage.getItem('quizlive_scores') || '[]');
-          const merged = [...data.scores];
-          localScores.forEach(ls => {
-            if (!merged.some(ms => ms.timestamp === ls.timestamp && ms.name === ls.name && ms.no === ls.no)) {
-              merged.push(ls);
-            }
-          });
-          localStorage.setItem('quizlive_scores', JSON.stringify(merged));
+          localStorage.setItem('quizlive_scores', JSON.stringify(data.scores));
           renderScoresList();
           renderKPIStats();
           if (showNotification) {
@@ -2791,7 +2786,7 @@
       }
     }
 
-    function deleteTeacherByAdmin(teacherId) {
+    async function deleteTeacherByAdmin(teacherId) {
       if (!currentTeacher || currentTeacher.id !== 'admin') {
         alert('เฉพาะผู้ดูแลระบบ (Admin) เท่านั้นที่สามารถจัดการบัญชีครูได้');
         return;
@@ -2801,7 +2796,18 @@
       const target = teachers.find(t => t.id === teacherId);
       if (!target) return;
 
-      if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบบัญชีคุณครู "${target.name}"?`)) {
+      if (confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบบัญชีคุณครู "${target.name}" ออกจากระบบออนไลน์?`)) {
+        if (cloudBackendUrl) {
+          try {
+            const cleanUrl = cloudBackendUrl.replace(/\/$/, '');
+            await fetch(`${cleanUrl}/api/teachers`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'deleteTeacher', teacherId: teacherId })
+            });
+          } catch(e){}
+        }
+
         const updated = teachers.filter(t => t.id !== teacherId);
         localStorage.setItem('quizlive_registered_teachers', JSON.stringify(updated));
         localStorage.removeItem(`quizlive_math_questions_${teacherId}`);
@@ -2885,12 +2891,42 @@
         localStorage.setItem('quizlive_current_teacher', JSON.stringify(currentTeacher));
         loadLocalData();
         showTeacherDashboard();
+        await syncTeachersFromCloud();
         await syncQuestionsFromCloud();
         return;
       }
 
-      // 2. Check registered teachers
-      const teachers = JSON.parse(localStorage.getItem('quizlive_registered_teachers') || '[]');
+      // 2. Try Online Cloudflare Worker Login first if backend is available
+      if (cloudBackendUrl) {
+        try {
+          const cleanUrl = cloudBackendUrl.replace(/\/$/, '');
+          const res = await fetch(`${cleanUrl}/api/auth`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: 'login', pin: inputPin })
+          });
+          const data = await res.json();
+          if (data && data.success && data.teacher) {
+            currentTeacher = data.teacher;
+            // Update local registered teachers cache
+            const teachers = getAllRegisteredTeachers();
+            if (!teachers.some(t => t.id === currentTeacher.id)) {
+              teachers.push(currentTeacher);
+              localStorage.setItem('quizlive_registered_teachers', JSON.stringify(teachers));
+            }
+            localStorage.setItem('quizlive_current_teacher', JSON.stringify(currentTeacher));
+            loadLocalData();
+            showTeacherDashboard();
+            await syncQuestionsFromCloud();
+            return;
+          }
+        } catch (err) {
+          console.warn('Online login check failed, checking local:', err);
+        }
+      }
+
+      // 3. Fallback: Check local registered teachers
+      const teachers = getAllRegisteredTeachers();
       const teacher = teachers.find(t => t.pin === inputPin);
 
       if (teacher) {
@@ -2900,7 +2936,7 @@
         showTeacherDashboard();
         await syncQuestionsFromCloud();
       } else {
-        alert('❌ รหัส PIN ไม่ถูกต้อง\n\n- หากเป็นผู้ดูแลระบบ ให้ใช้รหัส: 0000\n- หรือกดปุ่ม "ลงทะเบียนครูใหม่" ด้านล่างเพื่อตั้งชื่อและกำหนดรหัส PIN ประจำตัว');
+        alert('❌ รหัส PIN ไม่ถูกต้อง หรือยังไม่ได้ลงทะเบียนในระบบ\n\n- หากเป็นผู้ดูแลระบบ ให้ใช้รหัส: 0000\n- หรือกดปุ่ม "ลงทะเบียนครูใหม่" ด้านล่างเพื่อตั้งชื่อและกำหนดรหัส PIN ประจำตัว');
       }
     }
 
@@ -2919,7 +2955,7 @@
         return;
       }
 
-      const teachers = JSON.parse(localStorage.getItem('quizlive_registered_teachers') || '[]');
+      const teachers = getAllRegisteredTeachers();
       const existingPinTeacher = teachers.find(t => t.pin === pin);
       if (existingPinTeacher) {
         alert(`❌ รหัส PIN ${pin} มีผู้ใช้งานแล้ว (${existingPinTeacher.name})\nกรุณากำหนดรหัส PIN อื่น เช่น 1234, 5678, 8888`);
@@ -2927,15 +2963,42 @@
       }
 
       const teacherId = 'teacher_' + Date.now();
-      const newTeacher = { id: teacherId, name: name, pin: pin };
-      teachers.push(newTeacher);
+      let newTeacher = { id: teacherId, name: name, pin: pin };
 
+      // Save to Cloudflare Worker Online Backend
+      if (cloudBackendUrl) {
+        try {
+          const cleanUrl = cloudBackendUrl.replace(/\/$/, '');
+          const res = await fetch(`${cleanUrl}/api/auth`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              mode: 'register',
+              id: teacherId,
+              name: name,
+              pin: pin
+            })
+          });
+          const data = await res.json();
+          if (!data.success) {
+            alert(`❌ ไม่สามารถลงทะเบียนได้: ${data.error || 'กรุณาลองใหม่อีกครั้ง'}`);
+            return;
+          }
+          if (data.teacher) {
+            newTeacher = data.teacher;
+          }
+        } catch (err) {
+          console.warn('Could not register online, saving locally:', err);
+        }
+      }
+
+      teachers.push(newTeacher);
       localStorage.setItem('quizlive_registered_teachers', JSON.stringify(teachers));
       currentTeacher = newTeacher;
       localStorage.setItem('quizlive_current_teacher', JSON.stringify(currentTeacher));
       loadLocalData();
       closeTeacherRegisterModal();
-      alert(`🎉 ลงทะเบียนคุณครู "${name}" สำเร็จ!\n(ครั้งต่อไปสามารถกดรหัส PIN: ${pin} เพื่อเข้าสู่ระบบได้ทันที)`);
+      alert(`🎉 ลงทะเบียนคุณครู "${name}" สำเร็จและบันทึกลงระบบคลาวด์แล้ว!\n(ครั้งต่อไปสามารถกดรหัส PIN: ${pin} เพื่อเข้าสู่ระบบได้ทันทีจากทุกอุปกรณ์)`);
       showTeacherDashboard();
       await syncQuestionsFromCloud();
     }
@@ -4079,102 +4142,37 @@
 
     async function callGeminiApi(payload) {
       const activeModel = cleanAscii(currentSystemSettings.aiModel || 'gemini-2.5-flash');
-      const fallbackModel = cleanAscii(currentSystemSettings.aiFallbackModel || 'gemini-1.5-flash');
-      const rawApiKey = currentSystemSettings.apiKey || EMBEDDED_GEMINI_API_KEY || '';
-      let apiKey = cleanAscii(rawApiKey);
-      if (!apiKey || apiKey.length < 15) {
-        apiKey = cleanAscii(EMBEDDED_GEMINI_API_KEY);
+      const cloudBackendUrl = currentSystemSettings.cloudflareBackend || DEFAULT_CLOUDFLARE_BACKEND;
+
+      // ส่งทุก AI request ผ่าน Cloudflare Worker Proxy เสมอ
+      // (key เก็บใน Cloudflare D1 — ปลอดภัย ไม่โชว์ในโค้ด)
+      if (!cloudBackendUrl) {
+        throw new Error('ไม่พบ Cloudflare Backend URL — กรุณาตรวจสอบการตั้งค่า');
       }
 
-      // Dynamic model priority: activeModel first, then fallbackModel, then known stable models without duplicates
-      const models = Array.from(new Set([
-        activeModel,
-        fallbackModel,
-        'gemini-2.5-flash',
-        'gemini-2.0-flash',
-        'gemini-1.5-flash',
-        'gemini-2.5-flash-lite',
-        'gemini-3.6-flash',
-        'gemini-3.5-flash-lite',
-        'gemini-3.1-pro'
-      ])).filter(Boolean);
+      try {
+        const workerUrl = `${cloudBackendUrl.replace(/\/+$/, '')}/api/ai`;
+        const workerRes = await fetch(workerUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: activeModel,
+            payload: payload
+          })
+        });
 
-      const isOAuth = apiKey.startsWith('ya29.');
-      let lastError = null;
+        const workerData = await workerRes.json().catch(() => ({}));
 
-      // 1. Direct call to Google Generative Language API
-      for (const model of models) {
-        try {
-          let url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-          const reqHeaders = { 'Content-Type': 'application/json' };
-
-          if (isOAuth) {
-            reqHeaders['Authorization'] = `Bearer ${apiKey}`;
-          } else {
-            url += `?key=${encodeURIComponent(apiKey)}`;
-          }
-
-          let response = await fetch(url, {
-            method: 'POST',
-            headers: reqHeaders,
-            body: JSON.stringify(payload)
-          });
-
-          if (response.status === 400 && payload.generationConfig && payload.generationConfig.responseMimeType) {
-            const fallbackPayload = JSON.parse(JSON.stringify(payload));
-            delete fallbackPayload.generationConfig.responseMimeType;
-            response = await fetch(url, {
-              method: 'POST',
-              headers: reqHeaders,
-              body: JSON.stringify(fallbackPayload)
-            });
-          }
-
-          if (!response.ok) {
-            const errData = await response.json().catch(() => ({}));
-            const errMsg = errData.error ? errData.error.message : `HTTP ${response.status}`;
-            throw new Error(`[${model}] ${errMsg}`);
-          }
-
-          const data = await response.json();
-          if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-            throw new Error('AI ไม่ได้ส่งเนื้อหาคำตอบกลับมา');
-          }
-
-          const text = data.candidates[0].content.parts[0].text;
-          return text;
-        } catch (err) {
-          lastError = err;
-          console.warn(`Direct call with ${model} failed:`, err);
+        if (workerRes.ok && workerData.success && workerData.data?.candidates?.[0]?.content) {
+          return workerData.data.candidates[0].content.parts[0].text;
         }
+
+        const errMsg = workerData.error || `Worker HTTP ${workerRes.status}`;
+        throw new Error(errMsg);
+
+      } catch (err) {
+        throw new Error('เกิดข้อผิดพลาดในการวิเคราะห์รูปภาพด้วย AI: ' + err.message);
       }
-
-      // 2. Fallback via Cloudflare Worker Proxy
-      if (cloudBackendUrl) {
-        try {
-          const workerUrl = `${cloudBackendUrl.replace(/\/+$/, '')}/api/ai`;
-          const workerRes = await fetch(workerUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              apiKey: apiKey,
-              model: activeModel,
-              payload: payload
-            })
-          });
-
-          if (workerRes.ok) {
-            const data = await workerRes.json();
-            if (data.success && data.data && data.data.candidates && data.data.candidates[0] && data.data.candidates[0].content) {
-              return data.data.candidates[0].content.parts[0].text;
-            }
-          }
-        } catch (err) {
-          console.warn('Worker AI Proxy fallback failed:', err);
-        }
-      }
-
-      throw lastError || new Error('ไม่สามารถเชื่อมต่อ AI Gemini ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต');
     }
 
     function parseGeminiJsonQuestions(rawText, fallbackGrade) {
@@ -4423,7 +4421,7 @@ ${pdfOrText.substring(0, 15000)}
 
       document.getElementById('adminAiModelInput').value = currentSystemSettings.aiModel || 'gemini-2.5-flash';
       document.getElementById('adminAiFallbackModelInput').value = currentSystemSettings.aiFallbackModel || 'gemini-1.5-flash';
-      document.getElementById('adminAiApiKeyInput').value = currentSystemSettings.apiKey || EMBEDDED_GEMINI_API_KEY;
+      document.getElementById('adminAiApiKeyInput').value = currentSystemSettings.apiKey || '';
 
       const resultBox = document.getElementById('adminAiTestResultBox');
       if (resultBox) resultBox.classList.add('hidden');
@@ -4460,11 +4458,7 @@ ${pdfOrText.substring(0, 15000)}
 
     async function testAdminAiConnection() {
       const model = cleanAscii(document.getElementById('adminAiModelInput').value) || 'gemini-2.5-flash';
-      let rawKey = document.getElementById('adminAiApiKeyInput').value;
-      let apiKey = cleanAscii(rawKey);
-      if (!apiKey || apiKey.length < 15) {
-        apiKey = cleanAscii(EMBEDDED_GEMINI_API_KEY);
-      }
+      const newKey = cleanAscii(document.getElementById('adminAiApiKeyInput').value) || '';
 
       const resultBox = document.getElementById('adminAiTestResultBox');
       const statusEl = document.getElementById('adminAiTestStatus');
@@ -4475,8 +4469,8 @@ ${pdfOrText.substring(0, 15000)}
 
       resultBox.classList.remove('hidden');
       resultBox.className = 'p-3.5 rounded-2xl text-xs space-y-1 bg-blue-50 border border-blue-200 text-blue-900 transition-all';
-      statusEl.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></span> กำลังทดสอบส่งคำขอไปยังโมเดล ' + model + '...';
-      detailEl.innerText = 'กำลังเชื่อมต่อ Google Generative Language API...';
+      statusEl.innerHTML = '<span class="inline-block w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></span> กำลังทดสอบผ่าน Cloudflare Worker → โมเดล ' + model + '...';
+      detailEl.innerText = 'กำลังส่งคำขอไปยัง Cloudflare Worker Proxy...';
       if (testBtn) testBtn.disabled = true;
 
       const startTime = Date.now();
@@ -4486,59 +4480,43 @@ ${pdfOrText.substring(0, 15000)}
       };
 
       try {
-        const isOAuth = apiKey.startsWith('ya29.');
-        let url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-        const headers = { 'Content-Type': 'application/json' };
-        if (isOAuth) {
-          headers['Authorization'] = `Bearer ${apiKey}`;
-        } else {
-          url += `?key=${encodeURIComponent(apiKey)}`;
-        }
+        const workerUrl = `${cloudBackendUrl.replace(/\/+$/, '')}/api/ai`;
+        // ถ้ากรอก key ใหม่ใน form ให้ส่งไปทดสอบด้วย ถ้าไม่ได้กรอก worker จะใช้ key จาก D1
+        const body = { model, payload: testPayload };
+        if (newKey && newKey.length >= 15) body.apiKey = newKey;
 
-        let res = await fetch(url, {
+        const workerRes = await fetch(workerUrl, {
           method: 'POST',
-          headers: headers,
-          body: JSON.stringify(testPayload)
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
         });
 
-        // Fallback to Worker Proxy if direct call has issues
-        if (!res.ok && cloudBackendUrl) {
-          try {
-            const workerUrl = `${cloudBackendUrl.replace(/\/+$/, '')}/api/ai`;
-            const wRes = await fetch(workerUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ apiKey, model, payload: testPayload })
-            });
-            if (wRes.ok) {
-              res = wRes;
-            }
-          } catch(e){}
-        }
-
         const elapsed = Date.now() - startTime;
-        const resData = await res.json();
+        const resData = await workerRes.json().catch(() => ({}));
 
-        if (res.ok && (resData.candidates || (resData.data && resData.data.candidates))) {
-          const candidates = resData.candidates || resData.data.candidates;
-          const replyText = (candidates[0] && candidates[0].content && candidates[0].content.parts[0]) 
-            ? candidates[0].content.parts[0].text.trim() 
-            : 'OK';
-
+        if (workerRes.ok && resData.success && resData.data?.candidates?.[0]?.content) {
+          const replyText = resData.data.candidates[0].content.parts[0].text.trim();
           resultBox.className = 'p-3.5 rounded-2xl text-xs space-y-1 bg-emerald-50 border border-emerald-200 text-emerald-900 transition-all';
           statusEl.innerHTML = `<span>✅</span> <b>โมเดล "${model}" เชื่อมต่อสำเร็จ!</b> (ใช้เวลา ${elapsed} ms)`;
           detailEl.innerHTML = `💬 AI ตอบกลับ: "<b>${replyText}</b>"<br><span class="text-emerald-700 font-bold">✓ พร้อมใช้งานในการสกัดข้อสอบจากภาพ PDF และ OCR ทันที</span>`;
         } else {
-          const errMsg = resData.error ? (resData.error.message || JSON.stringify(resData.error)) : (resData.error || `HTTP Status ${res.status}`);
-          resultBox.className = 'p-3.5 rounded-2xl text-xs space-y-1 bg-rose-50 border border-rose-200 text-rose-900 transition-all';
+          const rawErrMsg = resData.error || `HTTP ${workerRes.status}`;
+          let hintHtml = '';
+          if (rawErrMsg.includes('ยังไม่มี Gemini API Key') || rawErrMsg.includes('API Key')) {
+            hintHtml = `<div class="mt-1.5 p-2 rounded-lg bg-white border border-amber-200 text-slate-800 text-[11px] leading-relaxed">
+              <span class="font-bold text-amber-700">💡 วิธีแก้ไข:</span> กรุณาใส่ API Key ในช่องด้านบนแล้วกด <b>บันทึก</b> ก่อน<br>
+              👉 ขอ key ฟรีได้ที่ <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="font-bold text-blue-600 underline">Google AI Studio ↗</a>
+            </div>`;
+          }
+          resultBox.className = 'p-3.5 rounded-2xl text-xs space-y-1.5 bg-rose-50 border border-rose-200 text-rose-900 transition-all';
           statusEl.innerHTML = `<span>❌</span> <b>โมเดล "${model}" ตอบกลับผิดพลาด</b> (${elapsed} ms)`;
-          detailEl.innerText = errMsg;
+          detailEl.innerHTML = `<span class="break-all">${rawErrMsg}</span>${hintHtml}`;
         }
       } catch (err) {
         const elapsed = Date.now() - startTime;
         resultBox.className = 'p-3.5 rounded-2xl text-xs space-y-1 bg-rose-50 border border-rose-200 text-rose-900 transition-all';
         statusEl.innerHTML = `<span>❌</span> <b>การเชื่อมต่อล้มเหลว</b> (${elapsed} ms)`;
-        detailEl.innerText = err.message || 'โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ตหรือชื่อโมเดล';
+        detailEl.innerText = err.message || 'โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ต';
       } finally {
         if (testBtn) testBtn.disabled = false;
       }
@@ -4547,15 +4525,13 @@ ${pdfOrText.substring(0, 15000)}
     async function saveAdminAiSettings() {
       const newModel = cleanAscii(document.getElementById('adminAiModelInput').value) || 'gemini-2.5-flash';
       const newFallback = cleanAscii(document.getElementById('adminAiFallbackModelInput').value) || 'gemini-1.5-flash';
-      let rawKey = document.getElementById('adminAiApiKeyInput').value;
-      let newApiKey = cleanAscii(rawKey);
-      if (!newApiKey || newApiKey.length < 15) {
-        newApiKey = cleanAscii(EMBEDDED_GEMINI_API_KEY);
-      }
+      const newApiKey = cleanAscii(document.getElementById('adminAiApiKeyInput').value) || '';
 
       currentSystemSettings.aiModel = newModel;
       currentSystemSettings.aiFallbackModel = newFallback;
-      currentSystemSettings.apiKey = newApiKey;
+      if (newApiKey && newApiKey.length >= 15) {
+        currentSystemSettings.apiKey = newApiKey;
+      }
 
       localStorage.setItem('quizlive_ai_model', newModel);
       localStorage.setItem('quizlive_ai_fallback_model', newFallback);
