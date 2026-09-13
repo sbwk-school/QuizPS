@@ -665,23 +665,42 @@ export default {
             }), { headers: corsHeaders, status: 400 });
           }
 
-          // AQ. และ ya29. ใช้ Authorization: Bearer header, AIzaSy... ใช้ ?key=
-          const isOAuth = apiKey.startsWith('ya29.') || apiKey.startsWith('AQ.');
-
           async function callGoogleApi(targetModel) {
             let googleUrl = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent`;
             const reqHeaders = { 'Content-Type': 'application/json' };
-            if (isOAuth) {
+
+            if (apiKey.startsWith('ya29.')) {
               reqHeaders['Authorization'] = `Bearer ${apiKey}`;
             } else {
+              // AQ. และ AIza... เป็น API Key ไม่ใช่ OAuth Token — ต้องส่งผ่าน x-goog-api-key และ ?key=
+              reqHeaders['x-goog-api-key'] = apiKey;
               googleUrl += `?key=${encodeURIComponent(apiKey)}`;
             }
 
-            return await fetch(googleUrl, {
+            let res = await fetch(googleUrl, {
               method: 'POST',
               headers: reqHeaders,
               body: JSON.stringify(payload)
             });
+
+            // เผื่อกรณีพิเศษ: ถ้า 401 และไม่ได้ใช้ Bearer ให้ลอง Authorization: Bearer สำรอง
+            if (res.status === 401 && !apiKey.startsWith('ya29.')) {
+              try {
+                const retryUrl = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent`;
+                const retryHeaders = {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${apiKey}`
+                };
+                const retryRes = await fetch(retryUrl, {
+                  method: 'POST',
+                  headers: retryHeaders,
+                  body: JSON.stringify(payload)
+                });
+                if (retryRes.ok) return retryRes;
+              } catch(e) {}
+            }
+
+            return res;
           }
 
           let googleRes = await callGoogleApi(model);
