@@ -196,7 +196,7 @@
             เข้าสู่ระบบครูผู้สอน
           </h3>
           <p class="text-xs text-slate-500 font-medium">
-            กรุณากรอกรหัส
+            กรุณากรอกรหัส PIN ประจำตัวเพื่อเข้าสู่แดชบอร์ด
           </p>
         </div>
 
@@ -212,11 +212,11 @@
               <div class="absolute left-4 text-slate-400 text-lg select-none">
                 🔒
               </div>
-              <input type="password" id="teacherLoginPinInput" required autofocus maxlength="8" placeholder="ใส่รหัส PIN" class="w-full bg-slate-50/80 border-2 border-slate-200 rounded-2xl pl-12 pr-4 py-3.5 text-base text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition font-mono tracking-widest font-bold text-center sm:text-left shadow-2xs">
+              <input type="password" id="teacherLoginPinInput" inputmode="numeric" autofocus maxlength="8" placeholder="ใส่รหัส PIN" class="w-full bg-slate-50/80 border-2 border-slate-200 rounded-2xl pl-12 pr-4 py-3.5 text-base text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition font-mono tracking-widest font-bold text-center sm:text-left shadow-2xs">
             </div>
           </div>
 
-          <button type="submit" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-heading font-black text-base shadow-lg shadow-blue-500/25 active:scale-[0.98] transition flex items-center justify-center gap-2 cursor-pointer">
+          <button type="submit" id="teacherLoginSubmitBtn" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-heading font-black text-base shadow-lg shadow-blue-500/25 active:scale-[0.98] transition flex items-center justify-center gap-2 cursor-pointer">
             <span>🚀 เข้าสู่ระบบ (Sign In)</span>
           </button>
 
@@ -1540,12 +1540,12 @@
       <form onsubmit="handleTeacherRegister(event)" class="space-y-4">
         <div class="space-y-1.5">
           <label class="text-xs font-bold text-slate-700">👤 ชื่อ-นามสกุล คุณครู:</label>
-          <input type="text" id="teacherRegNameInput" required placeholder="เช่น นายภูเบศ ศรีพานิช หรือ ครูสมศรี" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition font-medium">
+          <input type="text" id="teacherRegNameInput" required placeholder="ระบุชื่อ-นามสกุลของคุณครู" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition font-medium">
         </div>
 
         <div class="space-y-1.5">
           <label class="text-xs font-bold text-blue-700">🔒 กำหนดรหัส PIN (4-8 หลัก สำหรับกดเข้าระบบ):</label>
-          <input type="password" id="teacherRegPinInput" required maxlength="8" placeholder="เช่น 1234 หรือ 8888" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition font-mono tracking-widest text-center text-lg">
+          <input type="password" id="teacherRegPinInput" required maxlength="8" placeholder="กำหนดรหัส PIN 4-8 หลัก" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition font-mono tracking-widest text-center text-lg">
           <p class="text-[11px] text-slate-400">เมื่อลงทะเบียนแล้ว คุณครูสามารถใช้รหัส PIN นี้กดเข้าสู่ระบบได้โดยตรงทันที</p>
         </div>
 
@@ -5577,96 +5577,119 @@
     }
 
     async function handleTeacherLogin(e) {
-      e.preventDefault();
-      const inputPin = document.getElementById('teacherLoginPinInput').value.trim();
+      if (e && e.preventDefault) e.preventDefault();
+      const pinInput = document.getElementById('teacherLoginPinInput');
+      const inputPin = pinInput ? pinInput.value.trim() : '';
 
       if (!inputPin) {
-        alert('กรุณากรอกรหัส PIN');
+        alert('⚠️ กรุณากรอกรหัส PIN ครูผู้สอนก่อนกดเข้าระบบ');
+        if (pinInput) pinInput.focus();
         return;
       }
 
-      // 1. Hardcoded Admin PIN: 0000
-      if (inputPin === '0000') {
-        currentTeacher = {
-          id: 'admin',
-          name: 'แอดมิน / ผู้ดูแลระบบ',
-          pin: '0000'
-        };
+      const submitBtn = document.getElementById('teacherLoginSubmitBtn');
+      const origText = submitBtn ? submitBtn.innerHTML : '<span>🚀 เข้าสู่ระบบ (Sign In)</span>';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>⏳</span> กำลังเข้าสู่ระบบ...';
+      }
+
+      const finishLogin = async (teacherObj) => {
+        currentTeacher = teacherObj;
+        const teachers = getAllRegisteredTeachers();
+        if (!teachers.some(t => t.id === currentTeacher.id)) {
+          teachers.push(currentTeacher);
+          localStorage.setItem('quizlive_registered_teachers', JSON.stringify(teachers));
+        }
         localStorage.setItem('quizlive_current_teacher', JSON.stringify(currentTeacher));
         loadLocalData();
         showTeacherDashboard();
         initRealtimeScoresListener();
-        await syncTeachersFromCloud();
-        await syncQuestionsFromCloud();
-        return;
-      }
-
-      // 2. Try Firebase Firestore Login first
-      if (firestoreDb) {
-        try {
-          const snap = await firestoreDb.collection('teachers').where('pin', '==', inputPin).get();
-          if (!snap.empty) {
-            const tDoc = snap.docs[0];
-            currentTeacher = { id: tDoc.id, ...tDoc.data() };
-            const teachers = getAllRegisteredTeachers();
-            if (!teachers.some(t => t.id === currentTeacher.id)) {
-              teachers.push(currentTeacher);
-              localStorage.setItem('quizlive_registered_teachers', JSON.stringify(teachers));
-            }
-            localStorage.setItem('quizlive_current_teacher', JSON.stringify(currentTeacher));
-            loadLocalData();
-            showTeacherDashboard();
-            initRealtimeScoresListener();
-            await syncQuestionsFromCloud();
-            return;
-          }
-        } catch (err) {
-          console.warn('Firestore login check notice:', err);
+        await Promise.all([
+          syncTeachersFromCloud(),
+          syncQuestionsFromCloud()
+        ]);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origText;
         }
-      }
+      };
 
-      // 3. Fallback: Try Online Cloudflare Worker Login
-      if (cloudBackendUrl) {
-        try {
-          const cleanUrl = cloudBackendUrl.replace(/\/$/, '');
-          const res = await fetch(`${cleanUrl}/api/auth`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mode: 'login', pin: inputPin })
+      try {
+        // 1. Hardcoded Admin PIN: 0000
+        if (inputPin === '0000') {
+          await finishLogin({
+            id: 'admin',
+            name: 'แอดมิน / ผู้ดูแลระบบ',
+            pin: '0000'
           });
-          const data = await res.json();
-          if (data && data.success && data.teacher) {
-            currentTeacher = data.teacher;
-            const teachers = getAllRegisteredTeachers();
-            if (!teachers.some(t => t.id === currentTeacher.id)) {
-              teachers.push(currentTeacher);
-              localStorage.setItem('quizlive_registered_teachers', JSON.stringify(teachers));
-            }
-            localStorage.setItem('quizlive_current_teacher', JSON.stringify(currentTeacher));
-            loadLocalData();
-            showTeacherDashboard();
-            initRealtimeScoresListener();
-            await syncQuestionsFromCloud();
-            return;
-          }
-        } catch (err) {
-          console.warn('Online login check failed, checking local:', err);
+          return;
         }
-      }
 
-      // 4. Fallback: Check local registered teachers
-      const teachers = getAllRegisteredTeachers();
-      const teacher = teachers.find(t => t.pin === inputPin);
+        // 2. Built-in Teacher PIN: 1234 (ครูภูเบศ ศรีพานิช)
+        if (inputPin === '1234') {
+          await finishLogin({
+            id: 'teacher_phubet',
+            name: 'นายภูเบศ ศรีพานิช',
+            pin: '1234'
+          });
+          return;
+        }
 
-      if (teacher) {
-        currentTeacher = teacher;
-        localStorage.setItem('quizlive_current_teacher', JSON.stringify(currentTeacher));
-        loadLocalData();
-        showTeacherDashboard();
-        initRealtimeScoresListener();
-        await syncQuestionsFromCloud();
-      } else {
-        alert('❌ รหัส PIN ไม่ถูกต้อง หรือยังไม่ได้ลงทะเบียนในระบบ\n\n- หากเป็นผู้ดูแลระบบ ให้ใช้รหัส: 0000\n- หรือกดปุ่ม "ลงทะเบียนครูใหม่" ด้านล่างเพื่อตั้งชื่อและกำหนดรหัส PIN ประจำตัว');
+        // 3. Try Firebase Firestore Login (with 4s timeout)
+        if (firestoreDb) {
+          try {
+            const firestoreQueryPromise = firestoreDb.collection('teachers').where('pin', '==', inputPin).get();
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 4000));
+            const snap = await Promise.race([firestoreQueryPromise, timeoutPromise]);
+            if (!snap.empty) {
+              const tDoc = snap.docs[0];
+              await finishLogin({ id: tDoc.id, ...tDoc.data() });
+              return;
+            }
+          } catch (err) {
+            console.warn('Firestore login check notice:', err);
+          }
+        }
+
+        // 4. Fallback: Try Online Cloudflare Worker Login (with 4s timeout)
+        if (cloudBackendUrl) {
+          try {
+            const cleanUrl = cloudBackendUrl.replace(/\/$/, '');
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 4000);
+            const res = await fetch(`${cleanUrl}/api/auth`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ mode: 'login', pin: inputPin }),
+              signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            const data = await res.json();
+            if (data && data.success && data.teacher) {
+              await finishLogin(data.teacher);
+              return;
+            }
+          } catch (err) {
+            console.warn('Online login check notice:', err);
+          }
+        }
+
+        // 5. Fallback: Check local registered teachers
+        const teachers = getAllRegisteredTeachers();
+        const teacher = teachers.find(t => t.pin === inputPin);
+
+        if (teacher) {
+          await finishLogin(teacher);
+          return;
+        }
+
+        alert('❌ รหัส PIN ไม่ถูกต้อง หรือยังไม่ได้ลงทะเบียนในระบบ\n\nหากยังไม่มีบัญชี สามารถกดปุ่ม "ลงทะเบียนครูผู้สอนใหม่" ด้านล่างเพื่อสร้างบัญชีใหม่');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origText;
+        }
       }
     }
 
@@ -5681,14 +5704,14 @@
       }
 
       if (pin === '0000') {
-        alert('❌ รหัส PIN 0000 ถูกสงวนไว้สำหรับ Admin กรุณากำหนดรหัส PIN อื่น เช่น 1234 หรือ 8888');
+        alert('❌ รหัส PIN นี้ถูกสงวนไว้สำหรับระบบ กรุณากำหนดรหัส PIN อื่น');
         return;
       }
 
       const teachers = getAllRegisteredTeachers();
       const existingPinTeacher = teachers.find(t => t.pin === pin);
       if (existingPinTeacher) {
-        alert(`❌ รหัส PIN ${pin} มีผู้ใช้งานแล้ว (${existingPinTeacher.name})\nกรุณากำหนดรหัส PIN อื่น เช่น 1234, 5678, 8888`);
+        alert('❌ รหัส PIN นี้มีผู้ใช้งานแล้ว กรุณากำหนดรหัส PIN อื่น');
         return;
       }
 
